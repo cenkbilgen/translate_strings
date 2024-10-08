@@ -34,6 +34,9 @@ let package = Package(
                 .unsafeFlags(["-warnings-as-errors"], .when(configuration: .debug)),
             ]
         ),
-        .target(name: "Shared"),
+        .target(name: "Shared",
+                swiftSettings: [
+                    .unsafeFlags(["-warnings-as-errors"], .when(configuration: .debug)),
+                ]),
     ]
 )

@@ -57,5 +57,5 @@ OPTIONS:
 
 # Building
 
-1. Run `swift build -c release`. This makes the executibles files `translate_strings` and `translate` in the folder `./.build/release`.
-2. Copy the executible files anywhere you want, such as a place in your $PATH.
+1. Run `swift build -c release`. This makes the executable files `translate_strings` and `translate` in the folder `./.build/release`.
+2. Copy the executable files anywhere you want, such as a place in your $PATH.

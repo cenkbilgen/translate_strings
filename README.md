@@ -30,7 +30,7 @@ Example to create a Japanese translation of all strings in your app:
 > translate_strings -k key_id:deeplKey1 -t ja
 ```
 
-Strings that have not been translated yet will be processed. Any string with an existing translation or marked "do not translate" will be left alone. Your `Localizable.xcstrings` file will be modified, so commit every time before you run.
+Strings that have not been translated yet, will be processed. Any string with an existing translation or marked "do not translate" will be left alone. Your `Localizable.xcstrings` file will be modified, so commit every time before you run.
 
 ### Specifying the API Key
 You can provide the key verbatim with `-k this_is_the_actual_key` or have it saved and retrieved from the keychain by key ID with `-k key_id:key1`. If a key with the ID `key1` is not in the keychain, you will be prompted to provide one and subsequently just use the key ID. To view, modify, or delete keys, you can use the macOS _Keychain Access_ app and search for keys with the name `tools.xcode.translate_strings.`
@@ -38,7 +38,7 @@ You can provide the key verbatim with `-k this_is_the_actual_key` or have it sav
 ---
 
 # translate
-The package includes a second executable target, named **translate**. This just lets you perform one-off translations on the command line that output to STDOUT. Can be used for scripts or Fastlane. Shares they same keychain storage for API keys.
+The package includes a second executable target, named **translate**. This just lets you perform one-off translations on the command line that output to STDOUT. Can be used for scripts or Fastlane. Shares the same keychain storage for API keys.
 
 ```
 USAGE: translate --key <key> [--source <source>] --target <target> <input>

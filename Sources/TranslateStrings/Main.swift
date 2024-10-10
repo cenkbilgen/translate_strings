@@ -18,10 +18,20 @@ struct TranslateStrings: AsyncParsableCommand {
             completion: .file(extensions: ["xcstrings"]))
     var outFile: String = "Localizable.xcstrings"
 
-    static let keyIDPrefix = "key_id:"
+    enum KeyOptionPrefix: String, CustomStringConvertible {
+        case access = "key_id:"
+        case list = "list_key_ids:"
+        var description: String { rawValue }
+    }
+
     @Option(
         name: .shortAndLong,
-        help: "API key. Required. If prefixed with \"\(Self.keyIDPrefix)\" the value of the key will be retrieved from the keychain for that id (macOS only) otherwise it will treated as the the literal key value."
+        help: """
+    API key. Required. 
+    If prefixed with \"\(KeyOptionPrefix.access)\" the value of the key will be retrieved from the keychain for that id (macOS only).
+    If only \"\(KeyOptionPrefix.list)\" then lists any currently saved keychain ids.
+    Otherwise, it will treated as the literal API key value.
+    """
     )
     var key: String
 
@@ -36,6 +46,13 @@ struct TranslateStrings: AsyncParsableCommand {
     var target: String
 
     mutating func run() async throws {
+
+        if key == KeyOptionPrefix.list.rawValue {
+            let itemIds = try  KeychainItem.searchItems()
+            print(itemIds.formatted(.list(type: .and)))
+            return
+        }
+
         let url = URL(fileURLWithPath: file)
         let catalog = try StringsCatalog.read(url: url)
 

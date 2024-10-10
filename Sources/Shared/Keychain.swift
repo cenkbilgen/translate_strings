@@ -12,8 +12,10 @@ public struct KeychainItem {
         case systemError(OSStatus)
     }
 
+    public static let appKeychainPrefix = "tools.xcode.translate_strings."
+
     private static func accountString(_ key: String) -> String {
-        "tools.xcode.translate_strings." + key
+        appKeychainPrefix + key
     }
 
     public static func saveItem(id: String, value: String, updateExisting: Bool = true) throws {
@@ -71,6 +73,36 @@ public struct KeychainItem {
         return string
     }
 
+    public static func searchItems(prefix: String = appKeychainPrefix) throws -> [String] {
+        let query: [String: Any] = [
+            kSecClass as String: kSecClassGenericPassword,
+            // kSecAttrAccount as String: prefix + "*",
+            kSecMatchLimit as String: kSecMatchLimitAll,
+            kSecReturnAttributes as String: kCFBooleanTrue!,
+            kSecReturnData as String: kCFBooleanFalse!
+        ]
+        var result: AnyObject?
+        let status = SecItemCopyMatching(query as CFDictionary, &result)
+        guard status == errSecSuccess else {
+            if status == errSecItemNotFound {
+                throw Error.notFound
+            } else {
+                throw Error.systemError(status)
+            }
+        }
+        guard let items = result as? [[String: Any]] else {
+            throw Error.unexpectedItemData
+        }
+        return items
+            .compactMap { item in
+                if let account = item[kSecAttrAccount as String] as? String,
+                   account.hasPrefix(prefix) {
+                    return account.replacingOccurrences(of: prefix, with: "")
+                } else {
+                    return nil
+                }
+            }
+    }
 }
 
 

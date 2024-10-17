@@ -61,9 +61,9 @@ public enum Arguments {
     }
 
     public static func parseKeyArgument(value: String, allowSTDIN: Bool) throws -> String {
-        if value.hasPrefix(KeyOptionPrefix.list.description),
-           let keyIdComponent = value.split(separator: try Regex("^\(KeyOptionPrefix.access)")).first {
-//            let keyIdComponent = value.split(separator: Regex(/^key_id:/)).first {
+        if value.hasPrefix(KeyOptionPrefix.access.description),
+            let keyIdComponent = value.split(separator: try Regex("^\(KeyOptionPrefix.access)")).first {
+       //     let keyIdComponent = value.split(separator: Regex(/^key_id:/)).first {
             let keyId = String(keyIdComponent)
             do {
                 return try KeychainItem.readItem(id: keyId)

@@ -12,21 +12,9 @@ let package = Package(
     ],
     targets: [
         .executableTarget(
-            name: "translate_strings",
+            name: "Translate",
             dependencies: [
-                "Shared",
-                .product(name: "ArgumentParser", package: "swift-argument-parser"),
-                .product(name: "Algorithms", package: "swift-algorithms"),
-            ],
-            path: "Sources/TranslateStrings",
-            swiftSettings: [
-                .unsafeFlags(["-warnings-as-errors"], .when(configuration: .debug)),
-            ]
-        ),
-        .executableTarget(
-            name: "translate",
-            dependencies: [
-                "Shared",
+                "Translator",
                 .product(name: "ArgumentParser", package: "swift-argument-parser"),
                 .product(name: "Algorithms", package: "swift-algorithms"),
             ],
@@ -35,7 +23,8 @@ let package = Package(
                 .unsafeFlags(["-warnings-as-errors"], .when(configuration: .debug)),
             ]
         ),
-        .target(name: "Shared",
+        .target(name: "Translator",
+                path: "Sources/TranslationServices",
                 swiftSettings: [
                     .unsafeFlags(["-warnings-as-errors"], .when(configuration: .debug)),
                 ]),

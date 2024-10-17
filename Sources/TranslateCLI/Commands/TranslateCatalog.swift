@@ -8,7 +8,7 @@
 import Foundation
 import Algorithms
 import ArgumentParser
-import Shared
+import Translator
 
 struct TranslateStringsCatalogCommand: AsyncParsableCommand {
     static let configuration = CommandConfiguration(commandName: "strings-catalog",

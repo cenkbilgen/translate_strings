@@ -9,6 +9,7 @@
 
 import Foundation
 import ArgumentParser
+import Translator
 
 public enum TranslationModel: String, CaseIterable, ExpressibleByArgument {
     case deepl, gemini

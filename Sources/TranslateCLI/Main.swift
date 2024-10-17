@@ -1,6 +1,5 @@
 import Foundation
 import ArgumentParser
-import Shared
 
 @main
 struct TranslatorCommand: AsyncParsableCommand {

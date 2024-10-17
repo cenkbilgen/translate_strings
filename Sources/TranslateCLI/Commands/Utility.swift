@@ -7,7 +7,7 @@
 
 import Foundation
 import ArgumentParser
-import Shared
+import Translator
 
 struct ListKeysCommand: AsyncParsableCommand {
     static let configuration = CommandConfiguration(commandName: "list-keys",

@@ -14,8 +14,6 @@ public enum TranslatorError: Error {
     case httpResponseError(Int)
     case noTranslations
     case unsupportedRequest
-    case noEntry(String)
-    case markedDoNotTranslate
     case noAuthorizationKey
     case keyInputFailed
     case missingResponses
@@ -38,10 +36,6 @@ extension TranslatorError: LocalizedError {
             return NSLocalizedString("No translations were found.", comment: "No translations found")
         case .unsupportedRequest:
             return NSLocalizedString("The translation request is unsupported.", comment: "Unsupported request error")
-        case .noEntry(let entry):
-            return String(format: NSLocalizedString("No entry found for '%@'.", comment: "No entry found error"), entry)
-        case .markedDoNotTranslate:
-            return NSLocalizedString("The text is marked as 'Do Not Translate'.", comment: "Do not translate error")
         case .noAuthorizationKey:
             return NSLocalizedString("No authorization key was provided.", comment: "No authorization key error")
         case .keyInputFailed:

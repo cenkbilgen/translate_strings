@@ -1,12 +1,25 @@
+//
+//  TranslateCatalog.swift
+//  translate_tool
+//
+//  Created by Cenk Bilgen on 2024-10-17.
+//
+
 import Foundation
 import Algorithms
 import ArgumentParser
 import Shared
 
-@main
-struct TranslateStrings: AsyncParsableCommand {
+struct TranslateStringsCatalogCommand: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(commandName: "strings-catalog",
+                                                    abstract: "Translate all strings in an XCode Strings Catalog file.")
+
     @Flag(name: .shortAndLong, help: "Verbose output to STDOUT")
     var verbose: Bool = false
+
+    @OptionGroup var keyOptions: KeyOptions
+
+    @OptionGroup var translationOptions: TranslationOptions
 
     @Option(name: .shortAndLong,
             help: "Input Strings Catalog file.",
@@ -18,49 +31,31 @@ struct TranslateStrings: AsyncParsableCommand {
             completion: .file(extensions: ["xcstrings"]))
     var outFile: String = "Localizable.xcstrings"
 
-    @Option(
-        name: .shortAndLong,
-        help: ArgumentHelp(stringLiteral: Arguments.HelpText.key)
-    )
-    var key: String
-
-    @Option(name: .shortAndLong, help: "Allow STDIN input if prompted for key input. May be needed if using script or no direct tty access.")
-    var allowSTDIN = false
-
     static let sourceDefault = "from xcstrings file"
     @Option(name: .shortAndLong, help: "Override the source language identifier, ie \"en\".")
     var source: String = Self.sourceDefault
 
-    @Option(name: .shortAndLong, help: "The target language identifier, ie \"de\". Required.")
-    var target: String
-
     mutating func run() async throws {
-
-        if key == KeyOptionPrefix.list.rawValue {
-            let itemIds = try  KeychainItem.searchItems()
-            print(itemIds.formatted(.list(type: .and)))
-            return
-        }
 
         let url = URL(fileURLWithPath: file)
         let catalog = try StringsCatalog.read(url: url)
 
         let source = (source == Self.sourceDefault) ? catalog.sourceLanguage : source
-        guard let targetCode = Locale(identifier: target).language.languageCode else {
+        guard let targetCode = Locale(identifier: translationOptions.target).language.languageCode else {
             throw TranslatorError.unrecognizedTargetLanguage
         }
         guard let sourceCode = Locale(identifier: source).language.languageCode else {
             throw TranslatorError.unrecognizedSourceLanguage
         }
 
-        let key = try Arguments.parseKeyArgument(
-            value: key,
-            allowSTDIN: allowSTDIN
-        )
-
         #if DEBUG
         print("Translating \(sourceCode) to \(targetCode)")
         #endif
+
+        let key = try Arguments.parseKeyArgument(
+            value: keyOptions.key,
+            allowSTDIN: false
+        )
 
         let translator = TranslatorDeepL(
             key: key,

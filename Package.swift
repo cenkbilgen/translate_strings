@@ -28,6 +28,7 @@ let package = Package(
             dependencies: [
                 "Shared",
                 .product(name: "ArgumentParser", package: "swift-argument-parser"),
+                .product(name: "Algorithms", package: "swift-algorithms"),
             ],
             path: "Sources/TranslateCLI",
             swiftSettings: [

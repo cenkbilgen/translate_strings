@@ -11,26 +11,36 @@ import Foundation
 import ArgumentParser
 import Translator
 
-public enum TranslationModel: String, CaseIterable, ExpressibleByArgument {
-    case deepl, gemini
+public enum TranslationModel: CaseIterable, ExpressibleByArgument, Sendable {
+    case deepl, google(projectId: String)
+
+    // For argument help
+    public static let allCases: [TranslationModel] = [
+        .deepl, .google(projectId: "PROJECT_ID")
+    ]
 
     public init?(argument: String) {
-        switch argument {
-            case TranslationModel.deepl.rawValue:
-                self = .deepl
-            case TranslationModel.gemini.rawValue:
-                self = .gemini
-            default:
+        if argument == "deepL" {
+            self = .deepl
+        } else if argument.hasPrefix("google:") {
+            guard let projectId = argument.split(
+                separator: "google:",
+                maxSplits: 1
+            ).last else {
                 return nil
+            }
+            self = .google(projectId: String(projectId))
+        } else {
+            return nil
         }
     }
 
-    public func translator(key: String, sourceCode: Locale.LanguageCode? = nil) -> any Translator {
+    public func translator(key: String, sourceCode: Locale.LanguageCode? = nil) throws -> any Translator {
         switch self {
             case .deepl:
-                TranslatorDeepL(key: key, sourceLanguage: sourceCode)
-            case .gemini:
-                TranslatorGemini(key: key, sourceLanguage: sourceCode)
+                try TranslatorDeepL(key: key, sourceLanguage: sourceCode)
+            case .google(let projectId):
+                try TranslatorGoogle(key: key, projectId: projectId, sourceLanguage: sourceCode)
         }
     }
 }

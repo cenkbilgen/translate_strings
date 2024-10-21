@@ -14,10 +14,13 @@ public enum TranslatorError: Error {
     case httpResponseError(Int)
     case noTranslations
     case unsupportedRequest
+    case overTextCountLimit
     case noAuthorizationKey
     case keyInputFailed
     case missingResponses
     case notUTF8
+    case invalidURL
+    case sourceLanguageRequired
 }
 
 // AI generated
@@ -44,6 +47,11 @@ extension TranslatorError: LocalizedError {
             return NSLocalizedString("Some expected responses are missing.", comment: "Missing responses error")
         case .notUTF8:
             return NSLocalizedString("The input text is not encoded in UTF-8.", comment: "Not UTF-8 encoded error")
+            case .sourceLanguageRequired:
+                return NSLocalizedString("This service requires a source language to be specified.", comment: "Source language required")
+
+        default:
+                return NSLocalizedString("An error occurred.", comment: "Unspecified error")
         }
     }
 }

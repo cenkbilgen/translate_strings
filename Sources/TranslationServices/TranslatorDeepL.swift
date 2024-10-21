@@ -15,7 +15,7 @@ public struct TranslatorDeepL: Translator {
     // see https://developers.deepl.com/docs/resources/supported-languages#source-languages
     public let sourceLanguage: Locale.LanguageCode?
 
-    public init(key: String, sourceLanguage: Locale.LanguageCode?) {
+    public init(key: String, projectId: String? = nil, sourceLanguage: Locale.LanguageCode?) throws {
         self.key = key
         self.sourceLanguage = sourceLanguage
     }

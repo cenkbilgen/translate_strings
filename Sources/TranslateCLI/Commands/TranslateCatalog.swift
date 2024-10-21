@@ -21,6 +21,8 @@ struct TranslateStringsCatalogCommand: AsyncParsableCommand {
 
     @OptionGroup var translationOptions: TranslationOptions
 
+    @OptionGroup var modelOptions: TranslationModelOptions
+
     @Option(name: .shortAndLong,
             help: "Input Strings Catalog file.",
             completion: .file(extensions: ["xcstrings"]))
@@ -52,15 +54,10 @@ struct TranslateStringsCatalogCommand: AsyncParsableCommand {
         print("Translating \(sourceCode) to \(targetCode)")
         #endif
 
-        let key = try Arguments.parseKeyArgument(
-            value: keyOptions.key,
-            allowSTDIN: false
-        )
+        let key = try Arguments.parseKeyArgument(value: keyOptions.key, allowSTDIN: false)
 
-        let translator = TranslatorDeepL(
-            key: key,
-            sourceLanguage: sourceCode
-        )
+        let translator = try modelOptions.model.translator(key: key, sourceCode: sourceCode)
+
         printVerbose(verbose, "Parsing file \(url.lastPathComponent)")
         let stringKeys = catalog.strings.keys
 

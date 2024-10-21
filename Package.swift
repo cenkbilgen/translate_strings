@@ -6,6 +6,10 @@ import PackageDescription
 let package = Package(
     name: "translate_tool",
     platforms: [.macOS(.v15)],
+    products: [
+        .executable(name: "Translate", targets: ["Translate", "Translator"]),
+        .library(name: "TranslationServices", targets: ["Translator"])
+    ],
     dependencies: [
         .package(url: "https://github.com/apple/swift-argument-parser.git", from: "1.5.0"),
         .package(url: "https://github.com/apple/swift-algorithms.git", from: "1.2.0"),

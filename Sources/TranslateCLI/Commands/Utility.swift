@@ -33,7 +33,7 @@ struct AvailableLanguagesCommand: AsyncParsableCommand {
             allowSTDIN: false
         )
 
-        let translator = modelOptions.model.translator(key: key)
+        let translator = try modelOptions.model.translator(key: key)
 
         let languages = try await translator.availableLanguageCodes()
 

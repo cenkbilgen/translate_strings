@@ -12,7 +12,7 @@ public protocol Translator {
     var sourceLanguage: Locale.LanguageCode? { get }
     func translate(texts: [String], targetLanguage: Locale.LanguageCode) async throws -> [String]
     func availableLanguageCodes() async throws -> Set<String>
-    init(key: String, sourceLanguage: Locale.LanguageCode?) // nil is automatic
+    init(key: String, projectId: String?, sourceLanguage: Locale.LanguageCode?) throws
 }
 
 enum NetService {
@@ -31,16 +31,20 @@ enum NetService {
 
 extension Translator {
 
-    func send<ResponseBody: Decodable>(request: URLRequest) async throws -> ResponseBody {
+    func send<ResponseBody: Decodable>(
+        request: URLRequest,
+        decoder: JSONDecoder = NetService.decoder
+    ) async throws -> ResponseBody {
         let (data, response) = try await URLSession.shared.data(for: request)
         guard let httpResponse = response as? HTTPURLResponse else {
             throw TranslatorError.invalidResponse
         }
         let statusCode = httpResponse.statusCode
         guard statusCode == 200 else {
+            print(String(data: data, encoding: .utf8)!)
             throw TranslatorError.httpResponseError(statusCode)
         }
-        return try NetService.decoder.decode(ResponseBody.self, from: data)
+        return try decoder.decode(ResponseBody.self, from: data)
     }
 
 }

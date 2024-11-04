@@ -8,15 +8,30 @@
 // Gettings arguments related code
 
 import Foundation
+import ArgumentParser
+import TranslationServices
+
+public enum KeyOptionPrefix: String, CustomStringConvertible {
+    case access = "key_id:"
+    public var description: String { rawValue }
+}
 
 public enum Arguments {
 
-    public static let keyIDPrefix = "key_id:"
+    public struct HelpText {
+
+        public static let verbose = "Verbose output to STDOUT"
+
+        public static let key = """
+    API key. Required. 
+    If \"\(KeyOptionPrefix.access)[SOME KEY_ID]\" the key with id KEY_ID from the keychain will be used. If not found, you will be prompted to enter the key and it will be stored with that KEY_ID for subsequent calls.
+    Otherwise, it will be treated as the literal API key value.
+    """
+    }
 
     public static func parseKeyArgument(value: String, allowSTDIN: Bool) throws -> String {
-        if value.hasPrefix(Self.keyIDPrefix),
-           let keyIdComponent = value.split(separator: try Regex("^\(keyIDPrefix)")).first {
-//            let keyIdComponent = value.split(separator: Regex(/^key_id:/)).first {
+        if value.hasPrefix(KeyOptionPrefix.access.description),
+            let keyIdComponent = value.split(separator: try Regex("^\(KeyOptionPrefix.access)")).first {
             let keyId = String(keyIdComponent)
             do {
                 return try KeychainItem.readItem(id: keyId)
@@ -52,5 +67,4 @@ public enum Arguments {
         }
         return string
     }
-
 }

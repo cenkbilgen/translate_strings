@@ -6,7 +6,6 @@
 //
 
 import Foundation
-import Shared
 
 class StringsCatalog: Codable {
     let version: String
@@ -24,6 +23,16 @@ class StringsCatalog: Codable {
         enum State: String, Codable {
             case new, translated
         }
+    }
+
+    enum Error: Swift.Error {
+        case noEntry(String)
+        case markedDoNotTranslate
+        // TODO: NSLocalizedString
+//        case .noEntry(let entry):
+//            return String(format: NSLocalizedString("No entry found for '%@'.", comment: "No entry found error"), entry)
+//        case .markedDoNotTranslate:
+//            return NSLocalizedString("The text is marked as 'Do Not Translate'.", comment: "Do not translate error")
     }
 }
 
@@ -44,7 +53,7 @@ extension StringsCatalog {
 
     func getTranslation(key: String, language: String) throws -> String? {
         guard let entry = strings[key] else {
-            throw TranslatorError.noEntry(key)
+            throw Error.noEntry(key)
         }
         if entry.shouldTranslate == false {
             return key
@@ -61,10 +70,10 @@ extension StringsCatalog {
 
     func addTranslation(key: String, language: String, value: String) throws {
         guard let entry = strings[key] else {
-            throw TranslatorError.noEntry(key)
+            throw Error.noEntry(key)
         }
         guard entry.shouldTranslate != false else {
-            throw TranslatorError.markedDoNotTranslate
+            throw Error.markedDoNotTranslate
         }
         let unit = Entry.Unit(state: .translated, value: value)
         if entry.localizations == nil {

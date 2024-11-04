@@ -1,65 +1,66 @@
+//
+//  TranslationCommand.swift
+//  translate_tool
+//
+//  Created by Cenk Bilgen on 2024-11-04.
+//
+
 import Foundation
-import Algorithms
 import ArgumentParser
-import Shared
+import Algorithms
+import TranslationServices
 
-@main
-struct TranslateStrings: AsyncParsableCommand {
-    @Flag(name: .shortAndLong, help: "Verbose output to STDOUT")
-    var verbose: Bool = false
+protocol TranslationServiceCommand: AsyncParsableCommand {
+    static var model: (String, Locale.LanguageCode?) throws -> any Translator { get }
+}
 
-    @Option(name: .shortAndLong,
-            help: "Input Strings Catalog file.",
-            completion: .file(extensions: ["xcstrings"]))
-    var file: String = "Localizable.xcstrings"
+extension TranslationServiceCommand {
 
-    @Option(name: .shortAndLong,
-            help: "Output Strings Catalog file. Overwrites. Use \"-\" for STDOUT.",
-            completion: .file(extensions: ["xcstrings"]))
-    var outFile: String = "Localizable.xcstrings"
+    func runText(keyOptions: KeyOptions,
+                 translationOptions: TranslationOptions,
+                 source: String?,
+                 text: String) async throws {
+        guard let targetCode = Locale(identifier: translationOptions.target).language.languageCode else {
+            throw TranslatorError.unrecognizedTargetLanguage
+        }
+        let sourceCode: Locale.LanguageCode? = if let source {
+            Locale(identifier: source).language.languageCode
+        } else {
+            nil
+        }
+        let key = try Arguments.parseKeyArgument(value: keyOptions.key, allowSTDIN: false)
+        let translator = try Self.model(key, sourceCode)
+        let output = try await translator.translate(texts: [text], targetLanguage: targetCode)
+        guard let translation = output.first else {
+            throw TranslatorError.noTranslations
+        }
+        print(translation)
+    }
 
-    static let keyIDPrefix = "key_id:"
-    @Option(
-        name: .shortAndLong,
-        help: "API key. Required. If prefixed with \"\(Self.keyIDPrefix)\" the value of the key will be retrieved from the keychain for that id (macOS only) otherwise it will treated as the the literal key value."
-    )
-    var key: String
+    func runStringsCatalog(keyOptions: KeyOptions,
+                   translationOptions: TranslationOptions,
+                   stringsCatalogFile file: String,
+                   outFile: String,
+                   verbose: Bool) async throws {
 
-    @Option(name: .shortAndLong, help: "Allow STDIN input if prompted for key input. May be needed if using script or no direct tty access.")
-    var allowSTDIN = false
-
-    static let sourceDefault = "from xcstrings file"
-    @Option(name: .shortAndLong, help: "Override the source language identifier, ie \"en\".")
-    var source: String = Self.sourceDefault
-
-    @Option(name: .shortAndLong, help: "The target language identifier, ie \"de\". Required.")
-    var target: String
-
-    mutating func run() async throws {
         let url = URL(fileURLWithPath: file)
         let catalog = try StringsCatalog.read(url: url)
 
-        let source = (source == Self.sourceDefault) ? catalog.sourceLanguage : source
-        guard let targetCode = Locale(identifier: target).language.languageCode else {
-            throw TranslatorError.unrecognizedTargetLanguage
-        }
-        guard let sourceCode = Locale(identifier: source).language.languageCode else {
+        guard let sourceCode = Locale(identifier: catalog.sourceLanguage).language.languageCode else {
             throw TranslatorError.unrecognizedSourceLanguage
         }
-
-        let key = try Arguments.parseKeyArgument(
-            value: key,
-            allowSTDIN: allowSTDIN
-        )
+        guard let targetCode = Locale(identifier: translationOptions.target).language.languageCode else {
+            throw TranslatorError.unrecognizedTargetLanguage
+        }
 
         #if DEBUG
         print("Translating \(sourceCode) to \(targetCode)")
         #endif
 
-        let translator = TranslateDeepL(
-            key: key,
-            sourceLanguage: sourceCode
-        )
+        let key = try Arguments.parseKeyArgument(value: keyOptions.key, allowSTDIN: false)
+
+        let translator = try Self.model(key, sourceCode)
+
         printVerbose(verbose, "Parsing file \(url.lastPathComponent)")
         let stringKeys = catalog.strings.keys
 
@@ -114,5 +115,25 @@ struct TranslateStrings: AsyncParsableCommand {
             print(string)
         }
     }
+
 }
 
+struct KeyOptions: ParsableArguments {
+    @Option(name: .shortAndLong,
+        help: ArgumentHelp(stringLiteral: Arguments.HelpText.key)
+    )
+    var key: String
+}
+
+// MARK: Source/Target Language Codes
+
+struct TranslationOptions: ParsableArguments {
+
+    // NOTE: Source langauge can be autodetected from String Catalog, auto recognized, or required for Google.
+    // So handle it separately for each translation service
+
+    @Option(name: .shortAndLong,
+            help: "The target language identifier, ie \"de\". Required."
+    )
+    var target: String
+}

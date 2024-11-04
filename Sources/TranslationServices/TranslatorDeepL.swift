@@ -1,52 +1,35 @@
 //
-//  Translate.swift
-//  translate_strings
+//  TranslatorGemini.swift
+//  translate_tool
 //
-//  Created by Cenk Bilgen on 2024-10-06.
+//  Created by Cenk Bilgen on 2024-10-15.
 //
+
+// MARK: Translator for the DeepL Service
 
 import Foundation
-import Translation
 
-public protocol Translator {
-    var sourceLanguage: Locale.LanguageCode? { get }
-    func translate(texts: [String], targetLanguage: Locale.LanguageCode) async throws -> [String]
-}
-
-public struct TranslateDeepL: Translator {
+public struct TranslatorDeepL: Translator {
     let key: String
 
     // see https://developers.deepl.com/docs/resources/supported-languages#source-languages
     public let sourceLanguage: Locale.LanguageCode?
 
-    public init(key: String, sourceLanguage: Locale.LanguageCode?) {
+    public init(key: String, projectId: String? = nil, sourceLanguage: Locale.LanguageCode?) throws {
         self.key = key
         self.sourceLanguage = sourceLanguage
     }
 
-    let baseURL = URL(string: "https://api-free.deepl.com/v2/translate")!
+    let baseURL = URL(string: "https://api-free.deepl.com/v2/")!
 
-    func makeRequest() -> URLRequest {
-        var request = URLRequest(url: baseURL)
+    func makeRequest(path: String) -> URLRequest {
+        var request = URLRequest(url: baseURL.appending(path: path))
         request.setValue("DeepL-Auth-Key \(key)", forHTTPHeaderField: "Authorization")
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         return request
     }
 
-    let encoder: JSONEncoder = {
-        let coder = JSONEncoder()
-        coder.keyEncodingStrategy = .convertToSnakeCase
-        return coder
-    }()
-
-    let decoder: JSONDecoder = {
-        let coder = JSONDecoder()
-        coder.keyDecodingStrategy = .convertFromSnakeCase
-        return coder
-    }()
-
     func makeRequestBody(texts: [String], targetLanguage: Locale.LanguageCode) throws -> Data {
-        // specfic to DeepL service
         guard texts.count <= 50 else {
             throw TranslatorError.unsupportedRequest
         }
@@ -58,14 +41,25 @@ public struct TranslateDeepL: Translator {
             // let context = "text on a UI element of an app"
         }
 
-        return try encoder.encode(Body(
+        return try NetService.encoder.encode(Body(
             sourceLang: sourceLanguage?.identifier.uppercased(),
             targetLang: targetLanguage.identifier.uppercased(),
             text: texts))
     }
 
+    public func availableLanguageCodes() async throws -> Set<String> {
+        let request = makeRequest(path: "languages?type=target")
+        struct Language: Decodable {
+            let language: String
+            // let name: String
+            // let supportsFormaity: Bool
+        }
+        let body: [Language] = try await send(request: request)
+        return Set(body.map(\.language))
+    }
+
     public func translate(texts: [String], targetLanguage: Locale.LanguageCode) async throws -> [String] {
-        var request = makeRequest()
+        var request = makeRequest(path: "translate")
         request.httpMethod = "POST"
         request.httpBody = try makeRequestBody(
             texts: texts,
@@ -86,7 +80,9 @@ public struct TranslateDeepL: Translator {
             }
             let translations: [Translation]
         }
-        let body = try decoder.decode(Body.self, from: data)
+        let body = try NetService.decoder.decode(Body.self, from: data)
         return body.translations.map(\.text)
     }
 }
+
+

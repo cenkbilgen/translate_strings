@@ -54,9 +54,14 @@ public struct TranslatorGoogle: Translator {
             }
         }
 
+        let encoder = JSONEncoder()
+        guard let textsJSON = String(data: try encoder.encode(texts), encoding: .utf8) else {
+            throw TranslatorError.invalidInput
+        }
+
         request.httpBody = try NetService.encoder.encode(Body(contents: [
             Body.Content(parts: [
-                Body.Content.Part(text: "Translate the following strings found in an mobile app from langauge code \(sourceLanguage) to language with code \(targetLanguage). Only the results, each on a new line. Do not add any explanation or comment.: \(texts.joined(separator: "\n"))")
+                Body.Content.Part(text: "Translate the following strings found in a mobile app from langauge code \(sourceLanguage) to language with code \(targetLanguage). Only the results in JSON in the same format as the input, that is a top-level array. Do not add any explanation or comment.: \(textsJSON)")
             ])
         ]))
         // print("Request Body: \(String(data: request.httpBody!, encoding: .utf8)!)")
@@ -148,7 +153,11 @@ public struct TranslatorGoogle: Translator {
         }
 
         let body: Body = try await send(request: request, decoder: JSONDecoder())
-        let translatedTexts = body.candidates.compactMap(\.content.parts.first?.text)
-        return translatedTexts
+        let translatedTexts = body.candidates.compactMap(\.content.parts.first?.text).joined()
+        guard let data = translatedTexts.data(using: .utf8) else {
+            throw TranslatorError.notUTF8
+        }
+        let results = try JSONDecoder().decode([String].self, from: data)
+        return results
     }
 }

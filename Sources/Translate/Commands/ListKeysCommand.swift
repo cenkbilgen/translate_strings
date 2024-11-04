@@ -11,7 +11,7 @@ import TranslationServices
 
 struct ListKeysCommand: AsyncParsableCommand {
     static let configuration = CommandConfiguration(commandName: "list_keys",
-                                                    abstract: "List ids for all API keys for translation models in the Keychain.")
+                                                    abstract: "List API keys stored in Keychain.")
 
     mutating func run() async throws {
         let itemIds = try  KeychainItem.searchItems()

@@ -43,6 +43,7 @@ extension Translator {
             print(String(data: data, encoding: .utf8)!)
             throw TranslatorError.httpResponseError(statusCode)
         }
+        // print(String(data: data, encoding: .utf8)!)
         return try decoder.decode(ResponseBody.self, from: data)
     }
 

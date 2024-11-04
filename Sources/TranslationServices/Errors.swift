@@ -20,6 +20,7 @@ public enum TranslatorError: Error {
     case missingResponses
     case notUTF8
     case invalidURL
+    case invalidInput
     case sourceLanguageRequired
 }
 

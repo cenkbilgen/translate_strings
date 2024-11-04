@@ -28,10 +28,6 @@ struct DeepLCommand: AsyncParsableCommand {
         @OptionGroup var translationOptions: TranslationOptions
         
         @Option(name: .shortAndLong,
-                help: "Specify the source language identifier, ie \"en\". Optional or string_catalog base language.")
-        var source: String?
-        
-        @Option(name: .shortAndLong,
                 help: "Input Strings Catalog file.",
                 completion: .file(extensions: ["xcstrings"]))
         var file: String = "Localizable.xcstrings"

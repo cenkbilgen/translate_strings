@@ -6,7 +6,6 @@
 //
 
 import Foundation
-import Translation
 
 public protocol Translator {
     var sourceLanguage: Locale.LanguageCode? { get }

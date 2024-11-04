@@ -9,45 +9,10 @@
 
 import Foundation
 import ArgumentParser
-import Translator
-
-public enum TranslationModel: CaseIterable, ExpressibleByArgument, Sendable {
-    case deepl, google(projectId: String)
-
-    // For argument help
-    public static let allCases: [TranslationModel] = [
-        .deepl, .google(projectId: "PROJECT_ID")
-    ]
-
-    public init?(argument: String) {
-        if argument == "deepL" {
-            self = .deepl
-        } else if argument.hasPrefix("google:") {
-            guard let projectId = argument.split(
-                separator: "google:",
-                maxSplits: 1
-            ).last else {
-                return nil
-            }
-            self = .google(projectId: String(projectId))
-        } else {
-            return nil
-        }
-    }
-
-    public func translator(key: String, sourceCode: Locale.LanguageCode? = nil) throws -> any Translator {
-        switch self {
-            case .deepl:
-                try TranslatorDeepL(key: key, sourceLanguage: sourceCode)
-            case .google(let projectId):
-                try TranslatorGoogle(key: key, projectId: projectId, sourceLanguage: sourceCode)
-        }
-    }
-}
+import TranslationServices
 
 public enum KeyOptionPrefix: String, CustomStringConvertible {
     case access = "key_id:"
-    case list = "list:"
     public var description: String { rawValue }
 }
 
@@ -59,22 +24,14 @@ public enum Arguments {
 
         public static let key = """
     API key. Required. 
-    If \"\(KeyOptionPrefix.access)[SOME KEY_ID]\" the key with id KEY_ID from the keychain will be used. If there is not found, you will be prompted to enter the key and it will be stored with that KEY_ID for subsequent calls.
-    If \"\(KeyOptionPrefix.list)\", lists currently saved key ids in the keychain.
+    If \"\(KeyOptionPrefix.access)[SOME KEY_ID]\" the key with id KEY_ID from the keychain will be used. If not found, you will be prompted to enter the key and it will be stored with that KEY_ID for subsequent calls.
     Otherwise, it will be treated as the literal API key value.
     """
-    }
-
-    public static let autoDetectArgument = "auto"
-
-    public static func isListKeyArgument(argument: String) -> Bool {
-        argument.hasPrefix(KeyOptionPrefix.list.description)
     }
 
     public static func parseKeyArgument(value: String, allowSTDIN: Bool) throws -> String {
         if value.hasPrefix(KeyOptionPrefix.access.description),
             let keyIdComponent = value.split(separator: try Regex("^\(KeyOptionPrefix.access)")).first {
-       //     let keyIdComponent = value.split(separator: Regex(/^key_id:/)).first {
             let keyId = String(keyIdComponent)
             do {
                 return try KeychainItem.readItem(id: keyId)

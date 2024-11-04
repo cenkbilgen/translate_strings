@@ -7,7 +7,7 @@
 
 import Foundation
 import ArgumentParser
-import Translator
+import TranslationServices
 
 struct DeepLCommand: AsyncParsableCommand {
     static let configuration = CommandConfiguration(commandName: "deepl",

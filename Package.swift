@@ -7,8 +7,8 @@ let package = Package(
     name: "translate_tool",
     platforms: [.macOS(.v15)],
     products: [
-        .executable(name: "Translate", targets: ["Translate", "Translator"]),
-        .library(name: "TranslationServices", targets: ["Translator"])
+        .executable(name: "Translate", targets: ["Translate", "TranslationServices"]),
+        .library(name: "TranslationServices", targets: ["TranslationServices"])
     ],
     dependencies: [
         .package(url: "https://github.com/apple/swift-argument-parser.git", from: "1.5.0"),
@@ -18,16 +18,16 @@ let package = Package(
         .executableTarget(
             name: "Translate",
             dependencies: [
-                "Translator",
+                "TranslationServices",
                 .product(name: "ArgumentParser", package: "swift-argument-parser"),
                 .product(name: "Algorithms", package: "swift-algorithms"),
             ],
-            path: "Sources/TranslateCLI",
+            path: "Sources/Translate",
             swiftSettings: [
                 .unsafeFlags(["-warnings-as-errors"], .when(configuration: .debug)),
             ]
         ),
-        .target(name: "Translator",
+        .target(name: "TranslationServices",
                 path: "Sources/TranslationServices",
                 swiftSettings: [
                     .unsafeFlags(["-warnings-as-errors"], .when(configuration: .debug)),

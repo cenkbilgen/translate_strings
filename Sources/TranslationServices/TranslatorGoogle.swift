@@ -59,7 +59,7 @@ public struct TranslatorGoogle: Translator {
                 Body.Content.Part(text: "Translate the following strings found in an mobile app from langauge code \(sourceLanguage) to language with code \(targetLanguage). Only the results, each on a new line. Do not add any explanation or comment.: \(texts.joined(separator: "\n"))")
             ])
         ]))
-        print("Request Body: \(String(data: request.httpBody!, encoding: .utf8)!)")
+        // print("Request Body: \(String(data: request.httpBody!, encoding: .utf8)!)")
         return request
     }
 

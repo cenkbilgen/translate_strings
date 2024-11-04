@@ -7,7 +7,8 @@
 
 import Foundation
 import ArgumentParser
-import Translator
+import Algorithms
+import TranslationServices
 
 protocol TranslationServiceCommand: AsyncParsableCommand {
     static var model: (String, Locale.LanguageCode?) throws -> any Translator { get }

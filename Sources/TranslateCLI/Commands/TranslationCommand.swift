@@ -1,53 +1,55 @@
 //
-//  TranslateCatalog.swift
+//  TranslationCommand.swift
 //  translate_tool
 //
-//  Created by Cenk Bilgen on 2024-10-17.
+//  Created by Cenk Bilgen on 2024-11-04.
 //
 
 import Foundation
-import Algorithms
 import ArgumentParser
 import Translator
 
-struct TranslateStringsCatalogCommand: AsyncParsableCommand {
-    static let configuration = CommandConfiguration(commandName: "strings-catalog",
-                                                    abstract: "Translate all strings in an XCode Strings Catalog file.")
+protocol TranslationServiceCommand: AsyncParsableCommand {
+    static var model: (String, Locale.LanguageCode?) throws -> any Translator { get }
+}
 
-    @Flag(name: .shortAndLong, help: "Verbose output to STDOUT")
-    var verbose: Bool = false
+extension TranslationServiceCommand {
 
-    @OptionGroup var keyOptions: KeyOptions
+    func runText(keyOptions: KeyOptions,
+                 translationOptions: TranslationOptions,
+                 source: String?,
+                 text: String) async throws {
+        guard let targetCode = Locale(identifier: translationOptions.target).language.languageCode else {
+            throw TranslatorError.unrecognizedTargetLanguage
+        }
+        let sourceCode: Locale.LanguageCode? = if let source {
+            Locale(identifier: source).language.languageCode
+        } else {
+            nil
+        }
+        let key = try Arguments.parseKeyArgument(value: keyOptions.key, allowSTDIN: false)
+        let translator = try Self.model(key, sourceCode)
+        let output = try await translator.translate(texts: [text], targetLanguage: targetCode)
+        guard let translation = output.first else {
+            throw TranslatorError.noTranslations
+        }
+        print(translation)
+    }
 
-    @OptionGroup var translationOptions: TranslationOptions
-
-    @OptionGroup var modelOptions: TranslationModelOptions
-
-    @Option(name: .shortAndLong,
-            help: "Input Strings Catalog file.",
-            completion: .file(extensions: ["xcstrings"]))
-    var file: String = "Localizable.xcstrings"
-
-    @Option(name: .shortAndLong,
-            help: "Output Strings Catalog file. Overwrites. Use \"-\" for STDOUT.",
-            completion: .file(extensions: ["xcstrings"]))
-    var outFile: String = "Localizable.xcstrings"
-
-    static let sourceDefault = "from xcstrings file"
-    @Option(name: .shortAndLong, help: "Override the source language identifier, ie \"en\".")
-    var source: String = Self.sourceDefault
-
-    mutating func run() async throws {
+    func runStringsCatalog(keyOptions: KeyOptions,
+                   translationOptions: TranslationOptions,
+                   stringsCatalogFile file: String,
+                   outFile: String,
+                   verbose: Bool) async throws {
 
         let url = URL(fileURLWithPath: file)
         let catalog = try StringsCatalog.read(url: url)
 
-        let source = (source == Self.sourceDefault) ? catalog.sourceLanguage : source
+        guard let sourceCode = Locale(identifier: catalog.sourceLanguage).language.languageCode else {
+            throw TranslatorError.unrecognizedSourceLanguage
+        }
         guard let targetCode = Locale(identifier: translationOptions.target).language.languageCode else {
             throw TranslatorError.unrecognizedTargetLanguage
-        }
-        guard let sourceCode = Locale(identifier: source).language.languageCode else {
-            throw TranslatorError.unrecognizedSourceLanguage
         }
 
         #if DEBUG
@@ -56,7 +58,7 @@ struct TranslateStringsCatalogCommand: AsyncParsableCommand {
 
         let key = try Arguments.parseKeyArgument(value: keyOptions.key, allowSTDIN: false)
 
-        let translator = try modelOptions.model.translator(key: key, sourceCode: sourceCode)
+        let translator = try Self.model(key, sourceCode)
 
         printVerbose(verbose, "Parsing file \(url.lastPathComponent)")
         let stringKeys = catalog.strings.keys
@@ -112,5 +114,25 @@ struct TranslateStringsCatalogCommand: AsyncParsableCommand {
             print(string)
         }
     }
+
 }
 
+struct KeyOptions: ParsableArguments {
+    @Option(name: .shortAndLong,
+        help: ArgumentHelp(stringLiteral: Arguments.HelpText.key)
+    )
+    var key: String
+}
+
+// MARK: Source/Target Language Codes
+
+struct TranslationOptions: ParsableArguments {
+
+    // NOTE: Source langauge can be autodetected from String Catalog, auto recognized, or required for Google.
+    // So handle it separately for each translation service
+
+    @Option(name: .shortAndLong,
+            help: "The target language identifier, ie \"de\". Required."
+    )
+    var target: String
+}

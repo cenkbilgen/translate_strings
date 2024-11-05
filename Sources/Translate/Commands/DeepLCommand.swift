@@ -16,15 +16,18 @@ struct DeepLCommand: AsyncParsableCommand {
                                                         DeepLCommandStringsCatalog.self,
                                                         DeepLCommandText.self
                                                     ])
-    
+
+    static let keyEnvName = "TRANSLATE_DEEPL_API_KEY"
+
     struct DeepLCommandStringsCatalog: TranslationServiceCommand {
         static let configuration = CommandConfiguration(commandName: "strings_catalog",
                                                         abstract: "Translate Xcode Strings Catalog using DeepL service.")
         @Flag(name: .shortAndLong, help: "Verbose output to STDOUT")
         var verbose: Bool = false
-        
+
+        static var keyEnvName: String { DeepLCommand.keyEnvName }
         @OptionGroup var keyOptions: KeyOptions
-        
+
         @OptionGroup var translationOptions: TranslationOptions
         
         @Option(name: .shortAndLong,
@@ -53,8 +56,10 @@ struct DeepLCommand: AsyncParsableCommand {
     struct DeepLCommandText: TranslationServiceCommand {
         static let configuration = CommandConfiguration(commandName: "text",
                                                         abstract: "Translate text using DeepL service.")
+
+        static var keyEnvName: String { DeepLCommand.keyEnvName }
         @OptionGroup var keyOptions: KeyOptions
-        
+
         @OptionGroup var translationOptions: TranslationOptions
         
         @Option(name: .shortAndLong,

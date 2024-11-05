@@ -12,6 +12,7 @@ import TranslationServices
 
 protocol TranslationServiceCommand: AsyncParsableCommand {
     static var model: (String, Locale.LanguageCode?) throws -> any Translator { get }
+    static var keyEnvName: String { get }
 }
 
 extension TranslationServiceCommand {
@@ -28,7 +29,7 @@ extension TranslationServiceCommand {
         } else {
             nil
         }
-        let key = try Arguments.parseKeyArgument(value: keyOptions.key, allowSTDIN: false)
+        let key = try Arguments.parseKeyArgument(value: keyOptions.key, envName: Self.keyEnvName, allowSTDIN: false)
         let translator = try Self.model(key, sourceCode)
         let output = try await translator.translate(texts: [text], targetLanguage: targetCode)
         guard let translation = output.first else {
@@ -57,7 +58,7 @@ extension TranslationServiceCommand {
         print("Translating \(sourceCode) to \(targetCode)")
         #endif
 
-        let key = try Arguments.parseKeyArgument(value: keyOptions.key, allowSTDIN: false)
+        let key = try Arguments.parseKeyArgument(value: keyOptions.key, envName: Self.keyEnvName, allowSTDIN: false)
 
         let translator = try Self.model(key, sourceCode)
 

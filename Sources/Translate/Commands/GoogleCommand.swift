@@ -16,13 +16,16 @@ struct GoogleCommand: AsyncParsableCommand {
                                                         GoogleCommandStringsCatalog.self,
                                                         GoogleCommandText.self
                                                     ])
-    
+
+    static let keyEnvName = "TRANSLATE_GOOGLE_API_KEY"
+
     struct GoogleCommandStringsCatalog: TranslationServiceCommand {
         static let configuration = CommandConfiguration(commandName: "strings_catalog",
                                                         abstract: "Translate Xcode Strings Catalog using Google service.")
         @Flag(name: .shortAndLong, help: "Verbose output to STDOUT")
         var verbose: Bool = false
-        
+
+        static var keyEnvName: String { GoogleCommand.keyEnvName }
         @OptionGroup var keyOptions: KeyOptions
         
         @OptionGroup var translationOptions: TranslationOptions
@@ -53,8 +56,9 @@ struct GoogleCommand: AsyncParsableCommand {
     struct GoogleCommandText: TranslationServiceCommand {
         static let configuration = CommandConfiguration(commandName: "text",
                                                         abstract: "Translate text using Google AI service.")
+        static var keyEnvName: String { GoogleCommand.keyEnvName }
         @OptionGroup var keyOptions: KeyOptions
-        
+
         @OptionGroup var translationOptions: TranslationOptions
         
         @Option(name: .shortAndLong,

@@ -11,11 +11,6 @@ import Foundation
 import ArgumentParser
 import TranslationServices
 
-public enum KeyOptionPrefix: String, CustomStringConvertible {
-    case access = "key_id:"
-    public var description: String { rawValue }
-}
-
 public enum Arguments {
 
     public struct HelpText {
@@ -23,36 +18,70 @@ public enum Arguments {
         public static let verbose = "Verbose output to STDOUT"
 
         public static let key = """
-    API key. Required. 
-    If \"\(KeyOptionPrefix.access)[SOME KEY_ID]\" the key with id KEY_ID from the keychain will be used. If not found, you will be prompted to enter the key and it will be stored with that KEY_ID for subsequent calls.
-    Otherwise, it will be treated as the literal API key value.
+    The API key is required for this operation. 
+    
+    If you use the format `key_id:[SOME KEY_ID]`, the program will try to fetch the API key stored in the keychain under this KEY_ID. If the key is not found, you'll be prompted to enter it, and it will then be stored with that KEY_ID for future use. 
+    
+    Alternatively, if you use the format `env:`, the API key will be retrieved from the specified environment variable STRINGS_TRANSALTE_API_KEY_DEEPL or STRINGS_TRANSLATE_API_KEY_GOOGLE. 
+    
+    If you do not use either of these formats, the value you provide will be used directly as the API key."
     """
     }
 
-    public static func parseKeyArgument(value: String, allowSTDIN: Bool) throws -> String {
-        if value.hasPrefix(KeyOptionPrefix.access.description),
-            let keyIdComponent = value.split(separator: try Regex("^\(KeyOptionPrefix.access)")).first {
-            let keyId = String(keyIdComponent)
-            do {
-                return try KeychainItem.readItem(id: keyId)
-            } catch KeychainItem.Error.notFound {
-                print("No key entry with id \"\(keyId)\" is stored. Creating one now.")
-                let key = try readSecureInput(
-                    prompt: "Enter the key to store as id \(keyId)",
-                    allowStdin: allowSTDIN
-                )
-                Task {
-                    try KeychainItem.saveItem(id: keyId, value: key)
-                }
-                return key
-            } catch {
-                print(error)
-                throw error
-            }
+    enum MatchResult {
+        case keyID(String)
+        case env
+        case literal(String)
+    }
+
+    static func matchKeyArgument(value: String) -> MatchResult {
+        if let match = value.firstMatch(of: /^key_id:(?<keyid>[A-Za-z0-9_-]+)$/) {
+            return .keyID(String(match.output.keyid))
+        } else if value.firstMatch(of:  /^env:$/) != nil {
+            return .env
         } else {
-            return value
+            return .literal(value)
         }
     }
+
+    static func handle(keyId: String, allowSTDIN: Bool) throws -> String {
+        do {
+            return try KeychainItem.readItem(id: keyId)
+        } catch KeychainItem.Error.notFound {
+            print("No key entry with id \"\(keyId)\" is stored. Creating one now.")
+            let key = try readSecureInput(
+                prompt: "Enter the key to store as id \(keyId)",
+                allowStdin: allowSTDIN
+            )
+            Task {
+                try KeychainItem.saveItem(id: keyId, value: key)
+            }
+            return key
+        } catch {
+            print(error)
+            throw error
+        }
+    }
+
+    static func handle(envName: String) throws -> String {
+        guard let key = ProcessInfo().environment[envName.capitalized] else {
+            print("No key for environment variable \"\(envName.capitalized)\"")
+            throw TranslatorError.noAuthorizationKey
+        }
+        return key
+    }
+
+    public static func parseKeyArgument(value: String, envName: String, allowSTDIN: Bool) throws -> String {
+        switch matchKeyArgument(value: value) {
+            case .literal(let key):
+                key
+            case .keyID(let keyId):
+                try handle(keyId: keyId, allowSTDIN: allowSTDIN)
+            case .env:
+                try handle(envName: envName)
+        }
+    }
+
 
     static func readSecureInput(prompt: String, allowStdin: Bool) throws -> String {
         var buffer: [Int8] = Array(repeating: 0, count: 512)

@@ -12,7 +12,7 @@ import TranslationServices
 
 protocol TranslationServiceCommand: AsyncParsableCommand {
     static var model: (String, Locale.LanguageCode?) throws -> any Translator { get }
-    static var keyEnvName: String { get }
+    var keyEnvVarName: String { get }
 }
 
 extension TranslationServiceCommand {
@@ -29,7 +29,7 @@ extension TranslationServiceCommand {
         } else {
             nil
         }
-        let key = try Arguments.parseKeyArgument(value: keyOptions.key, envName: Self.keyEnvName, allowSTDIN: false)
+        let key = try KeyArgumentParser.parse(value: keyOptions.key, envVarName: keyEnvVarName, allowSTDIN: false)
         let translator = try Self.model(key, sourceCode)
         let output = try await translator.translate(texts: [text], targetLanguage: targetCode)
         guard let translation = output.first else {
@@ -58,8 +58,7 @@ extension TranslationServiceCommand {
         print("Translating \(sourceCode) to \(targetCode)")
         #endif
 
-        let key = try Arguments.parseKeyArgument(value: keyOptions.key, envName: Self.keyEnvName, allowSTDIN: false)
-
+        let key = try KeyArgumentParser.parse(value: keyOptions.key, envVarName: keyEnvVarName, allowSTDIN: false)
         let translator = try Self.model(key, sourceCode)
 
         printVerbose(verbose, "Parsing file \(url.lastPathComponent)")
@@ -120,8 +119,19 @@ extension TranslationServiceCommand {
 }
 
 struct KeyOptions: ParsableArguments {
+    static let helpText =
+    """
+    Required. You can provide the API key using one of the following methods:
+
+    1. Keychain: Use the format `key_id:[YOUR_KEY_ID]` like `key_id:key1`, to prompt a search for the API key stored under your specified `YOUR_KEY_ID` in the keychain. If the key isn't found, you will be asked to enter it, and it will be saved under `YOUR_KEY_ID`, scoped to this program, for future use.
+
+    2. Environment Variable: Use the format `env:`. The program will look for the API key in environment variables \(DeepLCommand.keyEnvVarName) or \(GoogleCommand.keyEnvVarName). 
+
+    3. Literal Value: If you do not specify a format, the provided value will be used directly as the API key.
+    """
+
     @Option(name: .shortAndLong,
-        help: ArgumentHelp(stringLiteral: Arguments.HelpText.key)
+            help: ArgumentHelp(stringLiteral: KeyOptions.helpText)
     )
     var key: String
 }

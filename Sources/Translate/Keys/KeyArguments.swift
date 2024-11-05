@@ -11,40 +11,19 @@ import Foundation
 import ArgumentParser
 import TranslationServices
 
-public enum Arguments {
+enum KeyArgumentParser {
 
-    public struct HelpText {
-
-        public static let verbose = "Verbose output to STDOUT"
-
-        public static let key = """
-    The API key is required for this operation. 
-    
-    If you use the format `key_id:[SOME KEY_ID]`, the program will try to fetch the API key stored in the keychain under this KEY_ID. If the key is not found, you'll be prompted to enter it, and it will then be stored with that KEY_ID for future use. 
-    
-    Alternatively, if you use the format `env:`, the API key will be retrieved from the specified environment variable STRINGS_TRANSALTE_API_KEY_DEEPL or STRINGS_TRANSLATE_API_KEY_GOOGLE. 
-    
-    If you do not use either of these formats, the value you provide will be used directly as the API key."
-    """
-    }
-
-    enum MatchResult {
-        case keyID(String)
-        case env
-        case literal(String)
-    }
-
-    static func matchKeyArgument(value: String) -> MatchResult {
+    static func parse(value: String, envVarName: String, allowSTDIN: Bool) throws -> String {
         if let match = value.firstMatch(of: /^key_id:(?<keyid>[A-Za-z0-9_-]+)$/) {
-            return .keyID(String(match.output.keyid))
+            try keyFrom(keyId: String(match.output.keyid), allowSTDIN: allowSTDIN)
         } else if value.firstMatch(of:  /^env:$/) != nil {
-            return .env
+            try keyFrom(envVarName: envVarName)
         } else {
-            return .literal(value)
+            value
         }
     }
 
-    static func handle(keyId: String, allowSTDIN: Bool) throws -> String {
+    private static func keyFrom(keyId: String, allowSTDIN: Bool) throws -> String {
         do {
             return try KeychainItem.readItem(id: keyId)
         } catch KeychainItem.Error.notFound {
@@ -63,27 +42,15 @@ public enum Arguments {
         }
     }
 
-    static func handle(envName: String) throws -> String {
-        guard let key = ProcessInfo().environment[envName.capitalized] else {
-            print("No key for environment variable \"\(envName.capitalized)\"")
+    private static func keyFrom(envVarName: String) throws -> String {
+        guard let key = ProcessInfo().environment[envVarName.capitalized] else {
+            print("No key for environment variable \"\(envVarName.capitalized)\"")
             throw TranslatorError.noAuthorizationKey
         }
         return key
     }
 
-    public static func parseKeyArgument(value: String, envName: String, allowSTDIN: Bool) throws -> String {
-        switch matchKeyArgument(value: value) {
-            case .literal(let key):
-                key
-            case .keyID(let keyId):
-                try handle(keyId: keyId, allowSTDIN: allowSTDIN)
-            case .env:
-                try handle(envName: envName)
-        }
-    }
-
-
-    static func readSecureInput(prompt: String, allowStdin: Bool) throws -> String {
+    private static func readSecureInput(prompt: String, allowStdin: Bool) throws -> String {
         var buffer: [Int8] = Array(repeating: 0, count: 512)
         let options = allowStdin ? (RPP_STDIN | RPP_ECHO_OFF) : RPP_ECHO_OFF
         let result = readpassphrase(prompt.cString(using: .utf8),
@@ -97,3 +64,5 @@ public enum Arguments {
         return string
     }
 }
+
+

@@ -9,7 +9,7 @@ import Foundation
 import ArgumentParser
 import TranslationServices
 
-struct DeepLCommand: AsyncParsableCommand {
+struct DeepLCommand: AsyncParsableCommand{
     static let configuration = CommandConfiguration(commandName: "deepl",
                                                     abstract: "Translate using DeepL service.",
                                                     subcommands: [
@@ -17,16 +17,17 @@ struct DeepLCommand: AsyncParsableCommand {
                                                         DeepLCommandText.self
                                                     ])
 
-    static let keyEnvName = "TRANSLATE_DEEPL_API_KEY"
+    static let keyEnvVarName = "TRANSLATE_DEEPL_API_KEY"
 
     struct DeepLCommandStringsCatalog: TranslationServiceCommand {
         static let configuration = CommandConfiguration(commandName: "strings_catalog",
                                                         abstract: "Translate Xcode Strings Catalog using DeepL service.")
+
         @Flag(name: .shortAndLong, help: "Verbose output to STDOUT")
         var verbose: Bool = false
 
-        static var keyEnvName: String { DeepLCommand.keyEnvName }
         @OptionGroup var keyOptions: KeyOptions
+        var keyEnvVarName: String { DeepLCommand.keyEnvVarName }
 
         @OptionGroup var translationOptions: TranslationOptions
         
@@ -57,8 +58,8 @@ struct DeepLCommand: AsyncParsableCommand {
         static let configuration = CommandConfiguration(commandName: "text",
                                                         abstract: "Translate text using DeepL service.")
 
-        static var keyEnvName: String { DeepLCommand.keyEnvName }
         @OptionGroup var keyOptions: KeyOptions
+        var keyEnvVarName: String { DeepLCommand.keyEnvVarName }
 
         @OptionGroup var translationOptions: TranslationOptions
         

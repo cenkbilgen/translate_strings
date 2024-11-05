@@ -122,11 +122,8 @@ struct KeyOptions: ParsableArguments {
     static let helpText =
     """
     Required. You can provide the API key using one of the following methods:
-
     1. Keychain: Use the format `key_id:[YOUR_KEY_ID]` like `key_id:key1`, to prompt a search for the API key stored under your specified `YOUR_KEY_ID` in the keychain. If the key isn't found, you will be asked to enter it, and it will be saved under `YOUR_KEY_ID`, scoped to this program, for future use.
-
     2. Environment Variable: Use the format `env:`. The program will look for the API key in environment variables \(DeepLCommand.keyEnvVarName) or \(GoogleCommand.keyEnvVarName). 
-
     3. Literal Value: If you do not specify a format, the provided value will be used directly as the API key.
     """
 

@@ -52,16 +52,41 @@ public struct TranslatorGoogle: Translator {
                     let text: String
                 }
             }
+            struct GenerationConfig: Encodable {
+                let responseMimeType = "application/json"
+
+                /* the response schema is a subset of OpenAPI 3.0
+                 which can be encoded as JSON, not yaml. Google's example:
+                 response_schema={
+                 "type": "STRING",
+                 "enum": ["Percussion", "String", "Woodwind", "Brass", "Keyboard"],
+                 },
+                 */
+
+                /*
+                 type: array
+                        items: type: string
+                 */
+                struct StringArraySchema: Encodable {
+                    let type = "ARRAY"
+                    let items = [
+                        "type": "STRING"
+                    ]
+                }
+                let responseSchema = StringArraySchema()
+            }
+            let generationConfig = GenerationConfig()
         }
 
         let encoder = JSONEncoder()
+        encoder.keyEncodingStrategy = .convertToSnakeCase
         guard let textsJSON = String(data: try encoder.encode(texts), encoding: .utf8) else {
             throw TranslatorError.invalidInput
         }
 
         request.httpBody = try NetService.encoder.encode(Body(contents: [
             Body.Content(parts: [
-                Body.Content.Part(text: "Translate the following strings found in a mobile app from langauge code \(sourceLanguage) to language with code \(targetLanguage). Only the results in JSON in the same format as the input, that is a top-level array. Do not add any explanation or comment.: \(textsJSON)")
+                Body.Content.Part(text: "Translate a JSON list of strings from langauge code \(sourceLanguage) to language with code \(targetLanguage). You output must also be an unformatted list of JSON. Here is the list: \(textsJSON)")
             ])
         ]))
         // print("Request Body: \(String(data: request.httpBody!, encoding: .utf8)!)")

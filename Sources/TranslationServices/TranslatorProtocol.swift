@@ -34,6 +34,11 @@ extension Translator {
         request: URLRequest,
         decoder: JSONDecoder = NetService.decoder
     ) async throws -> ResponseBody {
+
+        #if DEBUG
+        print(String(data: request.httpBody!, encoding: .utf8)!)
+        #endif
+
         let (data, response) = try await URLSession.shared.data(for: request)
         guard let httpResponse = response as? HTTPURLResponse else {
             throw TranslatorError.invalidResponse
@@ -43,7 +48,11 @@ extension Translator {
             print(String(data: data, encoding: .utf8)!)
             throw TranslatorError.httpResponseError(statusCode)
         }
-        // print(String(data: data, encoding: .utf8)!)
+
+        #if DEBUG
+        print(String(data: data, encoding: .utf8)!)
+        #endif
+
         return try decoder.decode(ResponseBody.self, from: data)
     }
 

@@ -29,7 +29,7 @@ extension TranslationServiceCommand {
         } else {
             nil
         }
-        let key = try KeyArgumentParser.parse(value: keyOptions.key, envVarName: keyEnvVarName, allowSTDIN: false)
+        let key = try KeyArgumentParser.parse(value: keyOptions.key, envVarName: keyEnvVarName, allowSTDIN: true)
         let translator = try Self.model(key, sourceCode)
         let output = try await translator.translate(texts: [text], targetLanguage: targetCode)
         guard let translation = output.first else {
@@ -58,7 +58,10 @@ extension TranslationServiceCommand {
         print("Translating \(sourceCode) to \(targetCode)")
         #endif
 
-        let key = try KeyArgumentParser.parse(value: keyOptions.key, envVarName: keyEnvVarName, allowSTDIN: false)
+        let key = try KeyArgumentParser.parse(value: keyOptions.key, envVarName: keyEnvVarName, allowSTDIN: true)
+        #if DEBUG
+        printVerbose(verbose, "Using key \(key)")
+        #endif
         let translator = try Self.model(key, sourceCode)
 
         printVerbose(verbose, "Parsing file \(url.lastPathComponent)")

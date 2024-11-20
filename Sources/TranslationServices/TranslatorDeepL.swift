@@ -48,7 +48,8 @@ public struct TranslatorDeepL: Translator {
     }
 
     public func availableLanguageCodes() async throws -> Set<String> {
-        let request = makeRequest(path: "languages?type=target")
+        let request = makeRequest(path: "languages")
+        //let request = makeRequest(path: "languages?type=target")
         struct Language: Decodable {
             let language: String
             // let name: String

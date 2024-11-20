@@ -14,7 +14,8 @@ struct DeepLCommand: AsyncParsableCommand {
                                                     abstract: "Translate using DeepL service.",
                                                     subcommands: [
                                                         DeepLCommandStringsCatalog.self,
-                                                        DeepLCommandText.self
+                                                        DeepLCommandText.self,
+                                                        DeepLCommandAvailableLanguages.self
                                                     ])
 
     static let keyEnvVarName = "TRANSLATE_DEEPL_API_KEY"
@@ -42,7 +43,7 @@ struct DeepLCommand: AsyncParsableCommand {
                 completion: .file(extensions: ["xcstrings"]))
         var outFile: String = "Localizable.xcstrings"
         
-        mutating func run() async throws {
+        func run() async throws {
             try await runStringsCatalog(keyOptions: keyOptions,
                                         translationOptions: translationOptions,
                                         stringsCatalogFile: file,
@@ -68,30 +69,27 @@ struct DeepLCommand: AsyncParsableCommand {
         @Argument(help: "The phrase to translate")
         var input: String
         
-        mutating func run() async throws {
+        func run() async throws {
             try await runText(keyOptions: keyOptions, translationOptions: translationOptions, source: source, text: input)
         }
     }
 
 // MARK: available_languages
 
-//    struct DeepLCommandAvailableLanguages: TranslationServiceCommand {
-//        static let configuration = CommandConfiguration(commandName: "available_languages",
-//                                                        abstract: "List available translation language codes.")
-//
-//        @OptionGroup var keyOptions: KeyOptions
-//        var keyEnvVarName: String { DeepLCommand.keyEnvVarName }
-//
-//        nonisolated(unsafe) static let model: (String, Locale.LanguageCode?) throws -> Translator = { key, source in
-//            try TranslatorDeepL(key: key, sourceLanguage: source)
-//        }
-//
-//        mutating func run() async throws {
-//            try await runText(keyOptions: keyOptions, translationOptions: translationOptions, source: source, text: input)
-//        }
-//    }
+    struct DeepLCommandAvailableLanguages: DeepLTranslationServiceCommand {
+        static let configuration = CommandConfiguration(commandName: "available_languages",
+                                                        abstract: "List available translation language codes.")
+
+        @OptionGroup var keyOptions: KeyOptions
+
+        func run() async throws {
+            try await runAvailableLanguages(keyOptions: keyOptions)
+        }
+    }
 
 }
+
+// MARK: Protocol
 
 protocol DeepLTranslationServiceCommand: TranslationServiceCommand {}
 

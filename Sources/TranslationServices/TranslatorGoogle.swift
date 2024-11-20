@@ -33,10 +33,7 @@ public struct TranslatorGoogle: Translator {
         self.baseURL = baseURL
     }
 
-    func makeRequest(texts: [String], sourceLanguage: Locale.LanguageCode, targetLanguage: Locale.LanguageCode) throws -> URLRequest {
-        guard texts.count <= 50 else {
-            throw TranslatorError.overTextCountLimit
-        }
+    func makeRequest(prompt: String) throws -> URLRequest {
         var request = URLRequest(url: baseURL)
 
         // -d '{"contents":[{"parts":[{"text":"Explain how AI works"}]}]}' \
@@ -78,32 +75,22 @@ public struct TranslatorGoogle: Translator {
             let generationConfig = GenerationConfig()
         }
 
-        let encoder = JSONEncoder()
-        encoder.keyEncodingStrategy = .convertToSnakeCase
-        guard let textsJSON = String(data: try encoder.encode(texts), encoding: .utf8) else {
-            throw TranslatorError.invalidInput
-        }
-
         request.httpBody = try NetService.encoder.encode(Body(contents: [
             Body.Content(parts: [
-                Body.Content.Part(text: "Translate a JSON list of strings from langauge code \(sourceLanguage) to language with code \(targetLanguage). Your output must also be an unformatted list of JSON. Here is the list: \(textsJSON)")
+                Body.Content.Part(text: prompt)
             ])
         ]))
-        // print("Request Body: \(String(data: request.httpBody!, encoding: .utf8)!)")
+
         return request
     }
 
     public func availableLanguageCodes() async throws -> Set<String> {
-//        let request = makeRequest(path: "languages?type=target")
-//        struct Language: Decodable {
-//            let language: String
-//            // let name: String
-//            // let supportsFormaity: Bool
-//        }
-//        let body: [Language] = try await send(request: request)
-//        return Set(body.map(\.language))
-        // TODO:
-        return []
+        let request = try makeRequest(
+            prompt: "List all written langauges you as an llm can translate to. Your output must be a JSON array of strings. Each language as it's IETF BCP 47 language code.")
+
+        let languages: [String] = try await send(request: request, decoder: JSONDecoder())
+        return Set(languages)
+
     }
 
     /*
@@ -151,14 +138,18 @@ public struct TranslatorGoogle: Translator {
      */
 
     public func translate(texts: [String], targetLanguage: Locale.LanguageCode) async throws -> [String] {
+        guard texts.count <= 50 else {
+            throw TranslatorError.overTextCountLimit
+        }
         guard let sourceLanguage else {
             throw TranslatorError.sourceLanguageRequired
         }
+        guard let textsJSON = String(data: try NetService.encoder.encode(texts), encoding: .utf8) else {
+            throw TranslatorError.invalidInput
+        }
 
         let request = try makeRequest(
-            texts: texts,
-            sourceLanguage: sourceLanguage,
-            targetLanguage: targetLanguage
+            prompt: "Translate a JSON list of strings from langauge code \(sourceLanguage) to language with code \(targetLanguage). Your output must also be an unformatted list of JSON. Here is the list: \(textsJSON)"
         )
 
         // NOTE: Looks similar to request body but slight difference mean can't reuse
@@ -182,6 +173,7 @@ public struct TranslatorGoogle: Translator {
         guard let data = translatedTexts.data(using: .utf8) else {
             throw TranslatorError.notUTF8
         }
+        // response mixes camel and snake case, use standard decoder
         let results = try JSONDecoder().decode([String].self, from: data)
         return results
     }

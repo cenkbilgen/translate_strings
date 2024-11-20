@@ -36,7 +36,11 @@ extension Translator {
     ) async throws -> ResponseBody {
 
         #if DEBUG
-        print(String(data: request.httpBody!, encoding: .utf8)!)
+        print("Request Body:")
+        if let data = request.httpBody,
+           let string = String(data: data, encoding: .utf8) {
+            print(string)
+        }
         #endif
 
         let (data, response) = try await URLSession.shared.data(for: request)
@@ -50,7 +54,10 @@ extension Translator {
         }
 
         #if DEBUG
-        print(String(data: data, encoding: .utf8)!)
+        print("Response Body:")
+        if let string = String(data: data, encoding: .utf8) {
+            print(string)
+        }
         #endif
 
         return try decoder.decode(ResponseBody.self, from: data)

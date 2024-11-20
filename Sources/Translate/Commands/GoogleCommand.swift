@@ -14,10 +14,13 @@ struct GoogleCommand: AsyncParsableCommand {
                                                     abstract: "Translate using Google AI service.",
                                                     subcommands: [
                                                         GoogleCommandStringsCatalog.self,
-                                                        GoogleCommandText.self
+                                                        GoogleCommandText.self,
+                                                        GoogleCommandAvailableLanguages.self
                                                     ])
 
     static let keyEnvVarName = "TRANSLATE_GOOGLE_API_KEY"
+
+// MARK: strings_catalog
 
     struct GoogleCommandStringsCatalog: GoogleTranslationServiceCommand {
         static let configuration = CommandConfiguration(commandName: "strings_catalog",
@@ -47,7 +50,9 @@ struct GoogleCommand: AsyncParsableCommand {
                                         verbose: verbose)
         }
     }
-    
+
+// MARK: text
+
     struct GoogleCommandText: GoogleTranslationServiceCommand {
         static let configuration = CommandConfiguration(commandName: "text",
                                                         abstract: "Translate text using Google AI service.")
@@ -67,7 +72,22 @@ struct GoogleCommand: AsyncParsableCommand {
             try await runText(keyOptions: keyOptions, translationOptions: translationOptions, source: source, text: input)
         }
     }
+
+    // MARK: available_languages
+
+    struct GoogleCommandAvailableLanguages: DeepLTranslationServiceCommand {
+        static let configuration = CommandConfiguration(commandName: "available_languages",
+                                                        abstract: "List available translation language codes.")
+
+        @OptionGroup var keyOptions: KeyOptions
+
+        func run() async throws {
+            try await runAvailableLanguages(keyOptions: keyOptions)
+        }
+    }
 }
+
+// MARK: Protocol
 
 protocol GoogleTranslationServiceCommand: TranslationServiceCommand {}
 

@@ -19,6 +19,8 @@ protocol TranslationServiceCommand: AsyncParsableCommand {
 
 extension TranslationServiceCommand {
 
+// MARK: text command
+
     func runText(keyOptions: KeyOptions,
                  translationOptions: TranslationOptions,
                  source: String?,
@@ -32,7 +34,6 @@ extension TranslationServiceCommand {
             nil
         }
         let key = try KeyArgumentParser.parse(value: keyOptions.key, envVarName: keyEnvVarName, allowSTDIN: true)
-        // let translator = try Self.model(key, sourceCode)
         let translator = try model(key: key, source: sourceCode)
         let output = try await translator.translate(texts: [text], targetLanguage: targetCode)
         guard let translation = output.first else {
@@ -40,6 +41,8 @@ extension TranslationServiceCommand {
         }
         print(translation)
     }
+
+// MARK: strings_catalog command
 
     func runStringsCatalog(keyOptions: KeyOptions,
                    translationOptions: TranslationOptions,
@@ -65,7 +68,6 @@ extension TranslationServiceCommand {
         #if DEBUG
         printVerbose(verbose, "Using key \(key)")
         #endif
-        // let translator = try Self.model(key, sourceCode)
         let translator = try model(key: key, source: sourceCode)
 
         printVerbose(verbose, "Parsing file \(url.lastPathComponent)")
@@ -114,6 +116,15 @@ extension TranslationServiceCommand {
             try output.write(to: URL(filePath: outFile))
             printVerbose(verbose, "New strings catalog file written to \(outFile)")
         }
+    }
+
+// MARK: available_languages command
+
+    func runAvailableLanguages(keyOptions: KeyOptions) async throws {
+        let key = try KeyArgumentParser.parse(value: keyOptions.key, envVarName: keyEnvVarName, allowSTDIN: true)
+        let translator = try model(key: key, source: nil)
+        let languages = try await translator.availableLanguageCodes()
+        print(languages.formatted(.list(type: .and)))
     }
 
     // TODO: Use oslog

@@ -9,7 +9,7 @@ import Foundation
 import ArgumentParser
 import TranslationServices
 
-struct DeepLCommand: AsyncParsableCommand{
+struct DeepLCommand: AsyncParsableCommand {
     static let configuration = CommandConfiguration(commandName: "deepl",
                                                     abstract: "Translate using DeepL service.",
                                                     subcommands: [
@@ -19,7 +19,9 @@ struct DeepLCommand: AsyncParsableCommand{
 
     static let keyEnvVarName = "TRANSLATE_DEEPL_API_KEY"
 
-    struct DeepLCommandStringsCatalog: TranslationServiceCommand {
+// MARK: strings_catalog
+
+    struct DeepLCommandStringsCatalog: DeepLTranslationServiceCommand {
         static let configuration = CommandConfiguration(commandName: "strings_catalog",
                                                         abstract: "Translate Xcode Strings Catalog using DeepL service.")
 
@@ -27,7 +29,6 @@ struct DeepLCommand: AsyncParsableCommand{
         var verbose: Bool = false
 
         @OptionGroup var keyOptions: KeyOptions
-        var keyEnvVarName: String { DeepLCommand.keyEnvVarName }
 
         @OptionGroup var translationOptions: TranslationOptions
         
@@ -41,10 +42,6 @@ struct DeepLCommand: AsyncParsableCommand{
                 completion: .file(extensions: ["xcstrings"]))
         var outFile: String = "Localizable.xcstrings"
         
-        nonisolated(unsafe) static let model: (String, Locale.LanguageCode?) throws -> Translator = { key, source in
-            try TranslatorDeepL(key: key, sourceLanguage: source)
-        }
-        
         mutating func run() async throws {
             try await runStringsCatalog(keyOptions: keyOptions,
                                         translationOptions: translationOptions,
@@ -53,13 +50,14 @@ struct DeepLCommand: AsyncParsableCommand{
                                         verbose: verbose)
         }
     }
-    
-    struct DeepLCommandText: TranslationServiceCommand {
+
+// MARK: text
+
+    struct DeepLCommandText: DeepLTranslationServiceCommand {
         static let configuration = CommandConfiguration(commandName: "text",
                                                         abstract: "Translate text using DeepL service.")
 
         @OptionGroup var keyOptions: KeyOptions
-        var keyEnvVarName: String { DeepLCommand.keyEnvVarName }
 
         @OptionGroup var translationOptions: TranslationOptions
         
@@ -70,12 +68,37 @@ struct DeepLCommand: AsyncParsableCommand{
         @Argument(help: "The phrase to translate")
         var input: String
         
-        nonisolated(unsafe) static let model: (String, Locale.LanguageCode?) throws -> Translator = { key, source in
-            try TranslatorDeepL(key: key, sourceLanguage: source)
-        }
-        
         mutating func run() async throws {
             try await runText(keyOptions: keyOptions, translationOptions: translationOptions, source: source, text: input)
         }
     }
+
+// MARK: available_languages
+
+//    struct DeepLCommandAvailableLanguages: TranslationServiceCommand {
+//        static let configuration = CommandConfiguration(commandName: "available_languages",
+//                                                        abstract: "List available translation language codes.")
+//
+//        @OptionGroup var keyOptions: KeyOptions
+//        var keyEnvVarName: String { DeepLCommand.keyEnvVarName }
+//
+//        nonisolated(unsafe) static let model: (String, Locale.LanguageCode?) throws -> Translator = { key, source in
+//            try TranslatorDeepL(key: key, sourceLanguage: source)
+//        }
+//
+//        mutating func run() async throws {
+//            try await runText(keyOptions: keyOptions, translationOptions: translationOptions, source: source, text: input)
+//        }
+//    }
+
+}
+
+protocol DeepLTranslationServiceCommand: TranslationServiceCommand {}
+
+extension DeepLTranslationServiceCommand {
+    func model(key: String, source: Locale.LanguageCode?) throws -> TranslatorDeepL {
+        try TranslatorDeepL(key: key, sourceLanguage: source)
+    }
+
+    var keyEnvVarName: String { DeepLCommand.keyEnvVarName }
 }

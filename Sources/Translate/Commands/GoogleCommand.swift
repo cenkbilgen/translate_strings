@@ -19,13 +19,12 @@ struct GoogleCommand: AsyncParsableCommand {
 
     static let keyEnvVarName = "TRANSLATE_GOOGLE_API_KEY"
 
-    struct GoogleCommandStringsCatalog: TranslationServiceCommand {
+    struct GoogleCommandStringsCatalog: GoogleTranslationServiceCommand {
         static let configuration = CommandConfiguration(commandName: "strings_catalog",
                                                         abstract: "Translate Xcode Strings Catalog using Google service.")
         @Flag(name: .shortAndLong, help: "Verbose output to STDOUT")
         var verbose: Bool = false
 
-        var keyEnvVarName: String { GoogleCommand.keyEnvVarName }
         @OptionGroup var keyOptions: KeyOptions
 
         @OptionGroup var translationOptions: TranslationOptions
@@ -40,10 +39,6 @@ struct GoogleCommand: AsyncParsableCommand {
                 completion: .file(extensions: ["xcstrings"]))
         var outFile: String = "Localizable.xcstrings"
         
-        nonisolated(unsafe) static let model: (String, Locale.LanguageCode?) throws -> Translator = { key, source in
-            try TranslatorGoogle(key: key, sourceLanguage: source)
-        }
-        
         mutating func run() async throws {
             try await runStringsCatalog(keyOptions: keyOptions,
                                         translationOptions: translationOptions,
@@ -53,11 +48,10 @@ struct GoogleCommand: AsyncParsableCommand {
         }
     }
     
-    struct GoogleCommandText: TranslationServiceCommand {
+    struct GoogleCommandText: GoogleTranslationServiceCommand {
         static let configuration = CommandConfiguration(commandName: "text",
                                                         abstract: "Translate text using Google AI service.")
         
-        var keyEnvVarName: String { GoogleCommand.keyEnvVarName }
         @OptionGroup var keyOptions: KeyOptions
 
         @OptionGroup var translationOptions: TranslationOptions
@@ -68,13 +62,19 @@ struct GoogleCommand: AsyncParsableCommand {
         
         @Argument(help: "The phrase to translate")
         var input: String
-        
-        nonisolated(unsafe) static let model: (String, Locale.LanguageCode?) throws -> Translator = { key, source in
-            try TranslatorGoogle(key: key, sourceLanguage: source)
-        }
-        
+
         mutating func run() async throws {
             try await runText(keyOptions: keyOptions, translationOptions: translationOptions, source: source, text: input)
         }
     }
+}
+
+protocol GoogleTranslationServiceCommand: TranslationServiceCommand {}
+
+extension GoogleTranslationServiceCommand {
+    func model(key: String, source: Locale.LanguageCode?) throws -> TranslatorGoogle {
+        try TranslatorGoogle(key: key, sourceLanguage: source)
+    }
+
+    var keyEnvVarName: String { GoogleCommand.keyEnvVarName }
 }

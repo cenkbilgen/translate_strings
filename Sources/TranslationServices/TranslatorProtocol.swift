@@ -7,7 +7,7 @@
 
 import Foundation
 
-public protocol Translator {
+public protocol Translator: Sendable {
     var sourceLanguage: Locale.LanguageCode? { get }
     func translate(texts: [String], targetLanguage: Locale.LanguageCode) async throws -> [String]
     func availableLanguageCodes() async throws -> Set<String>

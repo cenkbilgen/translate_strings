@@ -11,7 +11,9 @@ import Algorithms
 import TranslationServices
 
 protocol TranslationServiceCommand: AsyncParsableCommand {
-    static var model: (String, Locale.LanguageCode?) throws -> any Translator { get }
+    associatedtype T: Translator
+    // static var model: (String, Locale.LanguageCode?) throws -> any Translator { get }
+    func model(key: String, source: Locale.LanguageCode?) throws -> T
     var keyEnvVarName: String { get }
 }
 
@@ -30,7 +32,8 @@ extension TranslationServiceCommand {
             nil
         }
         let key = try KeyArgumentParser.parse(value: keyOptions.key, envVarName: keyEnvVarName, allowSTDIN: true)
-        let translator = try Self.model(key, sourceCode)
+        // let translator = try Self.model(key, sourceCode)
+        let translator = try model(key: key, source: sourceCode)
         let output = try await translator.translate(texts: [text], targetLanguage: targetCode)
         guard let translation = output.first else {
             throw TranslatorError.noTranslations
@@ -62,7 +65,8 @@ extension TranslationServiceCommand {
         #if DEBUG
         printVerbose(verbose, "Using key \(key)")
         #endif
-        let translator = try Self.model(key, sourceCode)
+        // let translator = try Self.model(key, sourceCode)
+        let translator = try model(key: key, source: sourceCode)
 
         printVerbose(verbose, "Parsing file \(url.lastPathComponent)")
         let stringKeys = catalog.strings.keys

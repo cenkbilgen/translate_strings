@@ -86,7 +86,7 @@ public struct TranslatorGoogle: Translator {
 
         request.httpBody = try NetService.encoder.encode(Body(contents: [
             Body.Content(parts: [
-                Body.Content.Part(text: "Translate a JSON list of strings from langauge code \(sourceLanguage) to language with code \(targetLanguage). You output must also be an unformatted list of JSON. Here is the list: \(textsJSON)")
+                Body.Content.Part(text: "Translate a JSON list of strings from langauge code \(sourceLanguage) to language with code \(targetLanguage). Your output must also be an unformatted list of JSON. Here is the list: \(textsJSON)")
             ])
         ]))
         // print("Request Body: \(String(data: request.httpBody!, encoding: .utf8)!)")

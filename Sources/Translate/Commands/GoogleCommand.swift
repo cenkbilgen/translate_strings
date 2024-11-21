@@ -24,7 +24,7 @@ struct GoogleCommand: AsyncParsableCommand {
 
     struct GoogleCommandStringsCatalog: GoogleTranslationServiceCommand {
         static let configuration = CommandConfiguration(commandName: "strings_catalog",
-                                                        abstract: "Translate Xcode Strings Catalog using Google service.")
+                                                        abstract: "Translate Xcode Strings Catalog using \(name) service.")
         @Flag(name: .shortAndLong, help: "Verbose output to STDOUT")
         var verbose: Bool = false
 
@@ -55,7 +55,7 @@ struct GoogleCommand: AsyncParsableCommand {
 
     struct GoogleCommandText: GoogleTranslationServiceCommand {
         static let configuration = CommandConfiguration(commandName: "text",
-                                                        abstract: "Translate text using Google AI service.")
+                                                        abstract: "Translate text using \(name) service.")
         
         @OptionGroup var keyOptions: KeyOptions
 
@@ -75,7 +75,7 @@ struct GoogleCommand: AsyncParsableCommand {
 
     // MARK: available_languages
 
-    struct GoogleCommandAvailableLanguages: DeepLTranslationServiceCommand {
+    struct GoogleCommandAvailableLanguages: GoogleTranslationServiceCommand {
         static let configuration = CommandConfiguration(commandName: "available_languages",
                                                         abstract: "List available translation language codes.")
 
@@ -92,6 +92,8 @@ struct GoogleCommand: AsyncParsableCommand {
 protocol GoogleTranslationServiceCommand: TranslationServiceCommand {}
 
 extension GoogleTranslationServiceCommand {
+    static var name: String { "GoogleAI Gemini" }
+    
     func model(key: String, source: Locale.LanguageCode?) throws -> TranslatorGoogle {
         try TranslatorGoogle(key: key, sourceLanguage: source)
     }

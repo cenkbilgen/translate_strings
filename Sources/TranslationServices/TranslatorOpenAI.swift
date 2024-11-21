@@ -12,6 +12,8 @@ public struct TranslatorOpenAI: Translator {
 
     let key: String
     let baseURL: URL
+    var model: String = "gpt-4o" // TODO: make enum
+    
     public let sourceLanguage: Locale.LanguageCode?
 
     public init(key: String, projectId: String? = nil, sourceLanguage: Locale.LanguageCode?) throws {
@@ -32,7 +34,7 @@ public struct TranslatorOpenAI: Translator {
         let content: String
     }
 
-    func makeRequest(prompt: String, model: String = "gpt-4o") throws -> URLRequest {
+    func makeRequest(prompt: String) throws -> URLRequest {
         var request = URLRequest(url: baseURL)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
@@ -42,8 +44,63 @@ public struct TranslatorOpenAI: Translator {
             let model: String
             let messages: [Message]
             let n: Int = 1
-            // must also instruct to output json: ie "Provide a JSON response containing an array of strings: ['example1', 'example2', 'example3']"
-            let responseFormat: String = #"{"type": "json_schema", "json_schema": { "[String]"}}"#
+            
+            // NOTES: On JSON Schema
+            // 1. See: https://json-schema.org/overview/what-is-jsonschema
+            // 2. MUST also instruct to output json: ie "Provide a JSON response containing an array of strings: ['example1', 'example2', 'example3']"
+            // 3. Can't specify a schema with top-level Array, must be object
+            // 4. must be lower case
+            /*
+             "response_format": {
+                 "type": "json_schema",
+                 "json_schema": {
+                   "name": "ArrayOfStringsObject",
+                   "schema": {
+                     "type": "object",
+                     "properties": {
+                       "data": {
+                         "type": "array",
+                         "items": {
+                           "type": "string"
+                         }
+                       }
+                     },
+                     "required": ["data"]
+                   },
+                   "strict": true
+                 }
+               }
+             }
+*/
+            
+            struct ResponseFormat: Encodable {
+                let type = "json_schema"
+                let jsonSchema = JSONSchema()
+                struct JSONSchema: Encodable {
+                    let name = "ArrayOfString" // OpenAI requires, not part of spec
+                    let strict = true
+                    let schema = Schema()
+                    struct Schema: Encodable {
+                        let type = "object"
+                        let additionalProperties = false
+                        let properties = Properties()
+                        struct Properties: Encodable {
+                            let data = StringArraySchema()
+                        }
+                        //let required = #"data"#
+                    }
+                    struct StringArraySchema: Encodable {
+                        let type = "array"
+                        let items = [
+                            "type": "string"
+                        ]
+                    }
+                }
+            }
+            struct JSONResponseFormat: Encodable {
+                let type = "json_array"
+            }
+            let responseFormat = JSONResponseFormat() //ResponseFormat()
         }
 
         request.httpBody = try NetService.encoder.encode(Body(model: model, messages: [
@@ -75,10 +132,9 @@ public struct TranslatorOpenAI: Translator {
         }
 
         let request = try makeRequest(
-            prompt: "Translate a JSON list of strings from langauge code \(sourceLanguage) to language with code \(targetLanguage). Your output must also be an unformatted list of JSON. Here is the list: \(textsJSON)"
+            prompt: "Translate a JSON list of strings from langauge code \(sourceLanguage) to language with code \(targetLanguage). Your output must also be an unformatted list of JSON with a top-level array. Here is the list: \(textsJSON)"
         )
 
-        // NOTE: Looks similar to request body but slight difference mean can't reuse
         struct Body: Decodable {
             let choices: [Choice]
             struct Choice: Decodable {
@@ -88,12 +144,11 @@ public struct TranslatorOpenAI: Translator {
             }
         }
 
-        let body: Body = try await send(request: request, decoder: JSONDecoder())
+        let body: Body = try await send(request: request, decoder: NetService.decoder)
         let translatedTexts = body.choices.map(\.message).first?.content // should be 1 in n=1
         guard let data = translatedTexts?.data(using: .utf8) else {
             throw TranslatorError.notUTF8
         }
-        // response mixes camel and snake case, use standard decoder
         let results = try JSONDecoder().decode([String].self, from: data)
         return results
     }

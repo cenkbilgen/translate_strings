@@ -9,23 +9,22 @@ import Foundation
 import ArgumentParser
 import TranslationServices
 
-struct DeepLCommand: AsyncParsableCommand {
-    static let configuration = CommandConfiguration(commandName: "deepl",
-                                                    abstract: "Translate using DeepL service.",
+struct OpenAICommand: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(commandName: "openai",
+                                                    abstract: "Translate using OpenAI service.",
                                                     subcommands: [
-                                                        DeepLCommandStringsCatalog.self,
-                                                        DeepLCommandText.self,
-                                                        DeepLCommandAvailableLanguages.self
+                                                        OpenAICommandStringsCatalog.self,
+                                                        OpenAICommandText.self,
+                                                        OpenAICommandAvailableLanguages.self
                                                     ])
 
-    static let keyEnvVarName = "TRANSLATE_DEEPL_API_KEY"
+    static let keyEnvVarName = "TRANSLATE_OPENAI_API_KEY"
 
 // MARK: strings_catalog
 
-    struct DeepLCommandStringsCatalog: DeepLTranslationServiceCommand {
+    struct OpenAICommandStringsCatalog: OpenAITranslationServiceCommand {
         static let configuration = CommandConfiguration(commandName: "strings_catalog",
                                                         abstract: "Translate Xcode Strings Catalog using \(name) service.")
-
         @Flag(name: .shortAndLong, help: "Verbose output to STDOUT")
         var verbose: Bool = false
 
@@ -43,7 +42,7 @@ struct DeepLCommand: AsyncParsableCommand {
                 completion: .file(extensions: ["xcstrings"]))
         var outFile: String = "Localizable.xcstrings"
         
-        func run() async throws {
+        mutating func run() async throws {
             try await runStringsCatalog(keyOptions: keyOptions,
                                         translationOptions: translationOptions,
                                         stringsCatalogFile: file,
@@ -54,10 +53,10 @@ struct DeepLCommand: AsyncParsableCommand {
 
 // MARK: text
 
-    struct DeepLCommandText: DeepLTranslationServiceCommand {
+    struct OpenAICommandText: OpenAITranslationServiceCommand {
         static let configuration = CommandConfiguration(commandName: "text",
                                                         abstract: "Translate text using \(name) service.")
-
+        
         @OptionGroup var keyOptions: KeyOptions
 
         @OptionGroup var translationOptions: TranslationOptions
@@ -68,15 +67,15 @@ struct DeepLCommand: AsyncParsableCommand {
         
         @Argument(help: "The phrase to translate")
         var input: String
-        
-        func run() async throws {
+
+        mutating func run() async throws {
             try await runText(keyOptions: keyOptions, translationOptions: translationOptions, source: source, text: input)
         }
     }
 
-// MARK: available_languages
+    // MARK: available_languages
 
-    struct DeepLCommandAvailableLanguages: DeepLTranslationServiceCommand {
+    struct OpenAICommandAvailableLanguages: OpenAITranslationServiceCommand {
         static let configuration = CommandConfiguration(commandName: "available_languages",
                                                         abstract: "List available translation language codes.")
 
@@ -86,19 +85,18 @@ struct DeepLCommand: AsyncParsableCommand {
             try await runAvailableLanguages(keyOptions: keyOptions)
         }
     }
-
 }
 
 // MARK: Protocol
 
-protocol DeepLTranslationServiceCommand: TranslationServiceCommand {}
+protocol OpenAITranslationServiceCommand: TranslationServiceCommand {}
 
-extension DeepLTranslationServiceCommand {
-    static var name: String { "DeepL" }
+extension OpenAITranslationServiceCommand {
+    static var name: String { "OpenAI" }
     
-    func model(key: String, source: Locale.LanguageCode?) throws -> TranslatorDeepL {
-        try TranslatorDeepL(key: key, sourceLanguage: source)
+    func model(key: String, source: Locale.LanguageCode?) throws -> TranslatorOpenAI {
+        try TranslatorOpenAI(key: key, sourceLanguage: source)
     }
 
-    var keyEnvVarName: String { DeepLCommand.keyEnvVarName }
+    var keyEnvVarName: String { OpenAICommand.keyEnvVarName }
 }

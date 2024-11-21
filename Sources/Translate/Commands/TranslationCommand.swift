@@ -15,6 +15,7 @@ protocol TranslationServiceCommand: AsyncParsableCommand {
     // static var model: (String, Locale.LanguageCode?) throws -> any Translator { get }
     func model(key: String, source: Locale.LanguageCode?) throws -> T
     var keyEnvVarName: String { get }
+    static var name: String { get }
 }
 
 extension TranslationServiceCommand {

@@ -10,19 +10,18 @@ import ArgumentParser
 import Algorithms
 import TranslationServices
 
-protocol TranslationServiceCommand: AsyncParsableCommand {
-    associatedtype T: Translator
-    // static var model: (String, Locale.LanguageCode?) throws -> any Translator { get }
-    func model(key: String, source: Locale.LanguageCode?) throws -> T
-    var keyEnvVarName: String { get }
+protocol TranslatorCommand: AsyncParsableCommand {
     static var name: String { get }
+    static var commandName: String { get }
+    static var keyEnvVarName: String { get }
+    associatedtype T: Translator
+    static func model(key: String, source: Locale.LanguageCode?) throws -> T
 }
 
-extension TranslationServiceCommand {
-
+extension TranslatorCommand {
 // MARK: text command
 
-    func runText(keyOptions: KeyOptions,
+    static func runText(keyOptions: KeyOptions,
                  translationOptions: TranslationOptions,
                  source: String?,
                  text: String) async throws {
@@ -34,8 +33,8 @@ extension TranslationServiceCommand {
         } else {
             nil
         }
-        let key = try KeyArgumentParser.parse(value: keyOptions.key, envVarName: keyEnvVarName, allowSTDIN: true)
-        let translator = try model(key: key, source: sourceCode)
+        let key = try KeyArgumentParser.parse(value: keyOptions.key, envVarName: Self.keyEnvVarName, allowSTDIN: true)
+        let translator = try Self.model(key: key, source: sourceCode)
         let output = try await translator.translate(texts: [text], targetLanguage: targetCode)
         guard let translation = output.first else {
             throw TranslatorError.noTranslations
@@ -45,7 +44,7 @@ extension TranslationServiceCommand {
 
 // MARK: strings_catalog command
 
-    func runStringsCatalog(keyOptions: KeyOptions,
+    static func runStringsCatalog(keyOptions: KeyOptions,
                    translationOptions: TranslationOptions,
                    stringsCatalogFile file: String,
                    outFile: String,
@@ -65,7 +64,7 @@ extension TranslationServiceCommand {
         print("Translating \(sourceCode) to \(targetCode)")
         #endif
 
-        let key = try KeyArgumentParser.parse(value: keyOptions.key, envVarName: keyEnvVarName, allowSTDIN: true)
+        let key = try KeyArgumentParser.parse(value: keyOptions.key, envVarName: Self.keyEnvVarName, allowSTDIN: true)
         #if DEBUG
         printVerbose(verbose, "Using key \(key)")
         #endif
@@ -121,46 +120,18 @@ extension TranslationServiceCommand {
 
 // MARK: available_languages command
 
-    func runAvailableLanguages(keyOptions: KeyOptions) async throws {
-        let key = try KeyArgumentParser.parse(value: keyOptions.key, envVarName: keyEnvVarName, allowSTDIN: true)
-        let translator = try model(key: key, source: nil)
+    static func runAvailableLanguages(keyOptions: KeyOptions) async throws {
+        let key = try KeyArgumentParser.parse(value: keyOptions.key, envVarName: Self.keyEnvVarName, allowSTDIN: true)
+        let translator = try Self.model(key: key, source: nil)
         let languages = try await translator.availableLanguageCodes()
         print(languages.formatted(.list(type: .and)))
     }
 
     // TODO: Use oslog
-    private func printVerbose(_ verbose: Bool, _ string: String) {
+    static private func printVerbose(_ verbose: Bool, _ string: String) {
         if verbose {
             print(string)
         }
     }
 
-}
-
-struct KeyOptions: ParsableArguments {
-    static let helpText =
-    """
-    Required. You can provide the API key using one of the following methods:
-    1. Keychain: Use the format `key_id:[YOUR_KEY_ID]` like `key_id:key1`, to prompt a search for the API key stored under your specified `YOUR_KEY_ID` in the keychain. If the key isn't found, you will be asked to enter it, and it will be saved under `YOUR_KEY_ID`, scoped to this program, for future use.
-    2. Literal Value: If you do not specify a format, the provided value will be used directly as the API key.
-    3. Environment Variable (NOT RECOMMENDED): Use the format `env:`. The program will look for the API key in environment variables \(DeepLCommand.keyEnvVarName) or \(GoogleCommand.keyEnvVarName). 
-    """
-
-    @Option(name: .shortAndLong,
-            help: ArgumentHelp(stringLiteral: KeyOptions.helpText)
-    )
-    var key: String
-}
-
-// MARK: Source/Target Language Codes
-
-struct TranslationOptions: ParsableArguments {
-
-    // NOTE: Source langauge can be autodetected from String Catalog, auto recognized, or required for Google.
-    // So handle it separately for each translation service
-
-    @Option(name: .shortAndLong,
-            help: "The target language identifier, ie \"de\". Required."
-    )
-    var target: String
 }

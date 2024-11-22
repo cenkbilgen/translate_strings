@@ -9,94 +9,55 @@ import Foundation
 import ArgumentParser
 import TranslationServices
 
-struct GoogleCommand: AsyncParsableCommand {
-    static let configuration = CommandConfiguration(commandName: "google",
-                                                    abstract: "Translate using Google AI service.",
+struct Google: TranslatorCommand {
+    static func model(key: String, source: Locale.LanguageCode?) throws -> TranslatorGoogle {
+        try TranslatorGoogle(key: key, sourceLanguage: source)
+    }
+        
+    static let commandName = "google"
+    static let name = "Google Gemini"
+    static let keyEnvVarName = "TRANSLATE_GOOGLE_API_KEY"
+    
+    static let configuration = CommandConfiguration(commandName: commandName,
+                                                    abstract: "Translate using \(name) service.",
                                                     subcommands: [
-                                                        GoogleCommandStringsCatalog.self,
-                                                        GoogleCommandText.self,
-                                                        GoogleCommandAvailableLanguages.self
+                                                        TextCommand.self,
+                                                        StringsCatalogCommand.self,
+                                                        AvailableLanguagesCommand.self
                                                     ])
 
-    static let keyEnvVarName = "TRANSLATE_GOOGLE_API_KEY"
 
-// MARK: strings_catalog
-
-    struct GoogleCommandStringsCatalog: GoogleTranslationServiceCommand {
-        static let configuration = CommandConfiguration(commandName: "strings_catalog",
-                                                        abstract: "Translate Xcode Strings Catalog using \(name) service.")
-        @Flag(name: .shortAndLong, help: "Verbose output to STDOUT")
-        var verbose: Bool = false
-
-        @OptionGroup var keyOptions: KeyOptions
-
-        @OptionGroup var translationOptions: TranslationOptions
-        
-        @Option(name: .shortAndLong,
-                help: "Input Strings Catalog file.",
-                completion: .file(extensions: ["xcstrings"]))
-        var file: String = "Localizable.xcstrings"
-        
-        @Option(name: .shortAndLong,
-                help: "Output Strings Catalog file. Overwrites. Use \"-\" for STDOUT.",
-                completion: .file(extensions: ["xcstrings"]))
-        var outFile: String = "Localizable.xcstrings"
+    struct StringsCatalogCommand: AsyncParsableCommand {
+        @OptionGroup var globalOptions: StringsCatalogGlobalOptions
         
         mutating func run() async throws {
-            try await runStringsCatalog(keyOptions: keyOptions,
-                                        translationOptions: translationOptions,
-                                        stringsCatalogFile: file,
-                                        outFile: outFile,
-                                        verbose: verbose)
+            try await runStringsCatalog(keyOptions: globalOptions.keyOptions,
+                                        translationOptions: globalOptions.translationOptions,
+                                        stringsCatalogFile: globalOptions.file,
+                                        outFile: globalOptions.outFile,
+                                        verbose: globalOptions.verbose)
         }
     }
-
-// MARK: text
-
-    struct GoogleCommandText: GoogleTranslationServiceCommand {
-        static let configuration = CommandConfiguration(commandName: "text",
-                                                        abstract: "Translate text using \(name) service.")
+    
+    struct TextCommand: AsyncParsableCommand {
+        @OptionGroup var globalOptions: TextGlobalOptions
         
-        @OptionGroup var keyOptions: KeyOptions
-
-        @OptionGroup var translationOptions: TranslationOptions
-        
-        @Option(name: .shortAndLong,
-                help: "Override autodetected source language, ie \"en\". Optional.")
-        var source: String?
-        
-        @Argument(help: "The phrase to translate")
-        var input: String
-
         mutating func run() async throws {
-            try await runText(keyOptions: keyOptions, translationOptions: translationOptions, source: source, text: input)
+            try await runText(keyOptions: globalOptions.keyOptions,
+                                     translationOptions: globalOptions.translationOptions,
+                                     source: globalOptions.source,
+                                     text: globalOptions.input)
         }
     }
-
-    // MARK: available_languages
-
-    struct GoogleCommandAvailableLanguages: GoogleTranslationServiceCommand {
+    
+    struct AvailableLanguagesCommand: AsyncParsableCommand {
         static let configuration = CommandConfiguration(commandName: "available_languages",
                                                         abstract: "List available translation language codes.")
-
+        
         @OptionGroup var keyOptions: KeyOptions
-
+        
         func run() async throws {
             try await runAvailableLanguages(keyOptions: keyOptions)
         }
     }
-}
-
-// MARK: Protocol
-
-protocol GoogleTranslationServiceCommand: TranslationServiceCommand {}
-
-extension GoogleTranslationServiceCommand {
-    static var name: String { "GoogleAI Gemini" }
-    
-    func model(key: String, source: Locale.LanguageCode?) throws -> TranslatorGoogle {
-        try TranslatorGoogle(key: key, sourceLanguage: source)
-    }
-
-    var keyEnvVarName: String { GoogleCommand.keyEnvVarName }
 }

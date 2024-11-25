@@ -9,7 +9,7 @@ struct TranslateCommand: AsyncParsableCommand {
         subcommands: [
             DeepL.self,
             Google.self,
-//            OpenAICommand.self,
+            OpenAI.self,
             ListKeysCommand.self,
         ]
     )

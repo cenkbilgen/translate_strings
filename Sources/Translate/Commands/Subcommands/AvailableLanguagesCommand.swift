@@ -21,6 +21,8 @@ struct AvailableLanguagesCommand<C: TranslatorCommand>: AsyncParsableCommand {
         let key = try KeyArgumentParser.parse(value: keyOptions.key, envVarName: C.keyEnvVarName, allowSTDIN: true)
         let translator = try C.model(key: key, source: nil)
         let languages = try await translator.availableLanguageCodes()
-        print(languages.formatted(.list(type: .and)))
+        print(languages.sorted().map {
+            $0.uppercased()
+        }.formatted(.list(type: .and)))
     }
 }

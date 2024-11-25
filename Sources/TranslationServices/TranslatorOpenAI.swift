@@ -20,9 +20,9 @@ public struct TranslatorOpenAI: Translator {
     public init(key: String, model: String, sourceLanguage: Locale.LanguageCode?) throws {
         self.key = key
         self.model = model
-        guard let sourceLanguage else {
-            throw TranslatorError.sourceLanguageRequired
-        }
+//        guard let sourceLanguage else {
+//            throw TranslatorError.sourceLanguageRequired
+//        }
         self.sourceLanguage = sourceLanguage
         self.baseURL = URL(string: "https://api.openai.com/v1/chat/completions")!
     }

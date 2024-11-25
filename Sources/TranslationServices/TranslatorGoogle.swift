@@ -23,9 +23,9 @@ public struct TranslatorGoogle: Translator {
 
     public init(key: String, projectId: String? = nil, sourceLanguage: Locale.LanguageCode?) throws {
         self.key = key
-        guard let sourceLanguage else {
-            throw TranslatorError.sourceLanguageRequired
-        }
+//        guard let sourceLanguage else {
+//            throw TranslatorError.sourceLanguageRequired
+//        }
         self.sourceLanguage = sourceLanguage
         guard let baseURL = URL(string: "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=\(key)") else {
             throw TranslatorError.invalidURL
@@ -88,9 +88,28 @@ public struct TranslatorGoogle: Translator {
         let request = try makeRequest(
             prompt: "List all written langauges you as an llm can translate to. Your output must be a JSON array of strings. Each language as it's IETF BCP 47 language code.")
 
-        let languages: [String] = try await send(request: request, decoder: JSONDecoder())
+        let body: ResponseBody = try await send(request: request, decoder: JSONDecoder())
+        guard let text = body.candidates.first?.content.parts.first?.text,
+              let data = text.data(using: .utf8) else {
+            throw TranslatorError.invalidResponse
+        }
+        let languages = try JSONDecoder().decode([String].self, from: data)
         return Set(languages)
-
+    }
+        
+    private struct ResponseBody: Decodable {
+        let candidates: [Candidate]
+        struct Candidate: Decodable {
+            let finishReason: String // "STOP"
+            let content: Content
+            struct Content: Decodable {
+                let role: String // "model" for response
+                let parts: [Part]
+                struct Part: Decodable {
+                    let text: String
+                }
+            }
+        }
     }
 
     /*
@@ -153,22 +172,9 @@ public struct TranslatorGoogle: Translator {
         )
 
         // NOTE: Looks similar to request body but slight difference mean can't reuse
-        struct Body: Decodable {
-            let candidates: [Candidate]
-            struct Candidate: Decodable {
-                let finishReason: String // "STOP"
-                let content: Content
-                struct Content: Decodable {
-                    let role: String // "model" for response
-                    let parts: [Part]
-                    struct Part: Decodable {
-                        let text: String
-                    }
-                }
-            }
-        }
+       
 
-        let body: Body = try await send(request: request, decoder: JSONDecoder())
+        let body: ResponseBody = try await send(request: request, decoder: JSONDecoder())
         let translatedTexts = body.candidates.compactMap(\.content.parts.first?.text).joined()
         guard let data = translatedTexts.data(using: .utf8) else {
             throw TranslatorError.notUTF8

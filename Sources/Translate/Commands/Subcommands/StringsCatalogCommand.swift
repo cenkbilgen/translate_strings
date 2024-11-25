@@ -8,6 +8,7 @@
 import Foundation
 import ArgumentParser
 import TranslationServices
+import StringsCatalog
 
 struct StringsCatalogCommand<C: TranslatorCommand>: AsyncParsableCommand, VerbosePrinter {
     static var configuration: CommandConfiguration {

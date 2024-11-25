@@ -12,12 +12,14 @@ public struct TranslatorOpenAI: Translator {
 
     let key: String
     let baseURL: URL
-    var model: String = "gpt-4o" // TODO: make enum
+    let model: String
     
     public let sourceLanguage: Locale.LanguageCode?
 
-    public init(key: String, projectId: String? = nil, sourceLanguage: Locale.LanguageCode?) throws {
+    // TODO: Make model enum
+    public init(key: String, model: String, sourceLanguage: Locale.LanguageCode?) throws {
         self.key = key
+        self.model = model
         guard let sourceLanguage else {
             throw TranslatorError.sourceLanguageRequired
         }

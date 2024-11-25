@@ -7,8 +7,9 @@ struct TranslateCommand: AsyncParsableCommand {
         commandName: "translate_strings",
         abstract: "A utility for language translation of Xcode Strings Catalogs or just plain strings. \(isDEBUG ? "(DEBUG BUILD)" : "")",
         subcommands: [
-            DeepLCommand.self,
-            GoogleCommand.self,
+            DeepL.self,
+            Google.self,
+            OpenAI.self,
             ListKeysCommand.self,
         ]
     )

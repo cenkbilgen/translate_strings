@@ -8,6 +8,7 @@
 import Foundation
 
 public struct TranslatorGoogleVertex: Translator {
+    
     // See: https://cloud.google.com/vertex-ai/generative-ai/docs/translate/translate-text#translation_llm
 
     let key: String
@@ -18,9 +19,9 @@ public struct TranslatorGoogleVertex: Translator {
 
     public init(key: String, projectId: String?, sourceLanguage: Locale.LanguageCode?) throws {
         self.key = key
-        guard let sourceLanguage else {
-            throw TranslatorError.sourceLanguageRequired
-        }
+//        guard let sourceLanguage else {
+//            throw TranslatorError.sourceLanguageRequired
+//        }
         self.sourceLanguage = sourceLanguage
         guard let projectId,
               let baseURL = URL(string:  "https://\(runLocation)-aiplatform.googleapis.com/v1/projects/\(projectId)/locations/\(runLocation)/publishers/google/models/cloud-translate-text:predict") else {

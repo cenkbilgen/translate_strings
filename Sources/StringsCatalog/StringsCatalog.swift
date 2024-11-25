@@ -7,25 +7,25 @@
 
 import Foundation
 
-class StringsCatalog: Codable {
-    let version: String
-    let sourceLanguage: String
-    var strings: [String: Entry]
+public final class StringsCatalog: Codable {
+    public let version: String
+    public let sourceLanguage: String
+    public var strings: [String: Entry]
 
-    struct Entry: Codable {
-        var shouldTranslate: Bool?
-        var localizations: [String: [String: Unit]]? // [language: ["stringUnit": unit]]
-        static let localizationsStringUnitKey = "stringUnit"
-        struct Unit: Codable {
-            var state: State
-            var value: String
+    public struct Entry: Codable {
+        public var shouldTranslate: Bool?
+        public var localizations: [String: [String: Unit]]? // [language: ["stringUnit": unit]]
+        public static let localizationsStringUnitKey = "stringUnit"
+        public struct Unit: Codable {
+            public var state: State
+            public var value: String
         }
-        enum State: String, Codable {
+        public enum State: String, Codable {
             case new, translated
         }
     }
 
-    enum Error: Swift.Error {
+    public enum Error: Swift.Error {
         case noEntry(String)
         case markedDoNotTranslate
         // TODO: NSLocalizedString
@@ -38,20 +38,20 @@ class StringsCatalog: Codable {
 
 extension StringsCatalog {
 
-    static func read(url: URL) throws -> StringsCatalog {
+    public static func read(url: URL) throws -> StringsCatalog {
         try JSONDecoder().decode(
             StringsCatalog.self,
             from: try Data(contentsOf: url)
         )
     }
 
-    func output() throws -> Data {
+    public func output() throws -> Data {
         let encoder = JSONEncoder()
         encoder.outputFormatting = .prettyPrinted
         return try encoder.encode(self)
     }
 
-    func getTranslation(key: String, language: String) throws -> String? {
+    public func getTranslation(key: String, language: String) throws -> String? {
         guard let entry = strings[key] else {
             throw Error.noEntry(key)
         }
@@ -68,7 +68,7 @@ extension StringsCatalog {
         }
     }
 
-    func addTranslation(key: String, language: String, value: String) throws {
+    public func addTranslation(key: String, language: String, value: String) throws {
         guard let entry = strings[key] else {
             throw Error.noEntry(key)
         }

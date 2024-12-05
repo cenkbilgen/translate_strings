@@ -4,10 +4,10 @@ A tool for Xcode to automatically add language translations to your Strings Cata
 
 ## Getting Started
 
-To translate all strings in your app to Japanese, use:
+To translate all strings in your app to Japanese using DeepL for translation, call:
 
 ```shell
-translate_strings deepl strings_catalog -k [your_api_key] -t ja
+strings_catalog_translate deepl -k [API_KEY] -t ja
 ```
 
 Ensure that the initial Strings Catalog file is added to your Xcode project. More details can be found [here](https://developer.apple.com/documentation/xcode/localizing-and-varying-text-with-a-string-catalog).
@@ -16,41 +16,54 @@ By default the command will read the `Localizable.xcstrings` from the path where
 
 ### Usage
 
-Command format:
+```
+OVERVIEW: A utility for language translation of Xcode Strings Catalogs. (DEBUG BUILD)
 
-```shell
-translate_strings [deepl/google/openai] [command: strings_catalog/text/available_languages] -k [key] -t [target_language_code]
+USAGE: strings_catalog_translate <subcommand>
+
+OPTIONS:
+  --version               Show the version.
+  -h, --help              Show help information.
+
+SUBCOMMANDS:
+  deepl                   Translate Xcode Strings Catalog using DeepL service.
+  openai (default)        Translate Xcode Strings Catalog using OpenAI service.
+  google                  Translate Xcode Strings Catalog using Google Gemini service.
+  list_keys               List API keys stored in Keychain.
+
+  See 'strings_catalog_translate help <subcommand>' for detailed help.
 ```
 
-Help is specific to any command level, for example:
+The subcommands have mostly the same arguments, with a few platform specific variations.
 
-```shell
-translate_strings deepl strings_catalog --help
 ```
+OVERVIEW: Translate Xcode Strings Catalog using OpenAI service.
 
-All services share the same subcommands and options with some platform-specific exceptions or requirements.
+```
+USAGE: strings_catalog_translate openai [--verbose] --key <key> --target-language <target-language> [--input-file <input-file>] [--output-file <output-file>]
 
-**OPTIONS:**
+OPTIONS:
+  -v, --verbose           Verbose output to STDOUT
+  -k, --key <key>         --key <key> (Required)
+                          The API key used for authentication. You can provide it in one of two ways:
 
-- `-v, --verbose`
-  Enable verbose output to STDOUT.
+                          1. From Keychain:
+                             Use the format `key_id:[YOUR_KEY_ID]` (e.g., `key_id:key1`). The tool will search for the specified `YOUR_KEY_ID` in the keychain.
+                             - If the key isn't found, you will be prompted to enter it.
+                             - The entered key will be securely saved under the provided `YOUR_KEY_ID` for future use.
 
-- `-k, --key <key>`  
-  Required. Use the literal API key or a key stored in the macOS Keychain as `key_id:[SOME_KEY_ID]`.
-  If there is no saved key with that "ID" found, you will prompted to enter one and it will be saved to the keychain.
-  The saved keys are accessible with the standard `keychain-access` app and namespaced to `tools.xcode.translate_strings.`. 
+                          2. Direct Value:
+                             Simply pass the API key as a literal string without any format (e.g., `--key your-api-key`).
 
-- `-t, --target <target>`  
-  Required. Specify the target language code, e.g., "de".
-
-- `-f, --file <file>`  
-  Input Strings Catalog file. Default is `Localizable.xcstrings`.
-
-- `-o, --out-file <out-file>`  
-  Output file. Overwrites existing file. Use "-" for STDOUT. Default is `Localizable.xcstrings`.
-
-- `-h, --help`  
-  Show help information.
+  -t, --target-language <target-language>
+                          The target language identifier, ie "de". Case-insensitive. Required.
+  -i, --input-file <input-file>
+                          Input Strings Catalog file. (default: Localizable.xcstrings)
+  -o, --output-file <output-file>
+                          Output Strings Catalog file. Overwrites. Use "-" for STDOUT. (default: Localizable.xcstrings)
+  --version               Show the version.
+  -h, --help              Show help information.
+```
 
 **Note:** Only untranslated strings will be processed. Those already translated or marked "do not translate" in the StringsCatalog are skipped. Ensure you commit changes in `Localizable.xcstrings` before using this tool.
 

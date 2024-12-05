@@ -18,10 +18,10 @@ struct TextCommand<C: TranslatorCommand>: AsyncParsableCommand {
     @OptionGroup var globalOptions: TextGlobalOptions
     
     mutating func run() async throws {
-        guard let targetCode = Locale(identifier: globalOptions.translationOptions.target).language.languageCode else {
+        guard let targetCode = Locale(identifier: globalOptions.translationOptions.targetLanguage).language.languageCode else {
             throw TranslatorError.unrecognizedTargetLanguage
         }
-        let sourceCode: Locale.LanguageCode? = if let source = globalOptions.source {
+        let sourceCode: Locale.LanguageCode? = if let source = globalOptions.sourceTranslationOptions.sourceLanguage {
             Locale(identifier: source).language.languageCode
         } else {
             nil

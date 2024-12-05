@@ -15,8 +15,12 @@ struct ListKeysCommand: AsyncParsableCommand {
 
     mutating func run() async throws {
         let itemIds = try  KeychainItem.searchItems()
-        print(itemIds.formatted(.list(type: .and)))
-        print("\n")
-        print("Edit or delete keys through the macOS \"keychain-access\" tool. Search for keys with the prefix \"tools.xcode.translate_strings.\".")
+        if itemIds.isEmpty {
+            print("No saved keys found.")
+        } else {
+            print(itemIds.formatted(.list(type: .and)))
+            print("\n")
+            print("Edit or delete keys through the macOS \"keychain-access\" tool. Search for keys with the prefix \"tools.xcode.translate_strings.\".")
+        }
     }
 }

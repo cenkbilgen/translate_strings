@@ -12,20 +12,20 @@ import StringsCatalogKit
 
 struct StringsCatalogCommand<C: TranslatorCommand>: AsyncParsableCommand, VerbosePrinter {
     static var configuration: CommandConfiguration {
-        CommandConfiguration(commandName: "strings_catalog",
+        CommandConfiguration(commandName: C.commandName,
                              abstract: "Translate Xcode Strings Catalog using \(C.name) service.")
     }
     
     @OptionGroup var globalOptions: StringsCatalogGlobalOptions
     
     mutating func run() async throws {
-        let url = URL(fileURLWithPath: globalOptions.file)
+        let url = URL(fileURLWithPath: globalOptions.inputFile)
         let catalog = try StringsCatalog.read(url: url)
         
         guard let sourceCode = Locale(identifier: catalog.sourceLanguage).language.languageCode else {
             throw TranslatorError.unrecognizedSourceLanguage
         }
-        guard let targetCode = Locale(identifier: globalOptions.translationOptions.target).language.languageCode else {
+        guard let targetCode = Locale(identifier: globalOptions.translationOptions.targetLanguage).language.languageCode else {
             throw TranslatorError.unrecognizedTargetLanguage
         }
         
@@ -75,7 +75,7 @@ struct StringsCatalogCommand<C: TranslatorCommand>: AsyncParsableCommand, Verbos
         }
         
         let output = try catalog.output()
-        let outFile = globalOptions.outFile
+        let outFile = globalOptions.outputFile
         if outFile == "-" {
             guard let string = String(data: output, encoding: .utf8) else {
                 throw TranslatorError.notUTF8

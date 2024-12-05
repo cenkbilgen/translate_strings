@@ -39,7 +39,6 @@ The subcommands have mostly the same arguments, with a few platform specific var
 ```
 OVERVIEW: Translate Xcode Strings Catalog using OpenAI service.
 
-```
 USAGE: strings_catalog_translate openai [--verbose] --key <key> --target-language <target-language> [--input-file <input-file>] [--output-file <output-file>]
 
 OPTIONS:
@@ -65,7 +64,10 @@ OPTIONS:
   -h, --help              Show help information.
 ```
 
-**Note:** Only untranslated strings will be processed. Those already translated or marked "do not translate" in the StringsCatalog are skipped. Ensure you commit changes in `Localizable.xcstrings` before using this tool.
+**Notes:** 
+
+1.  Only untranslated strings will be processed. Those already translated or marked "do not translate" in the Strings Catalog are skipped.
+2.  By default the `Localizable.xcstrings` file will be modified.
 
 ### API Keys
 
@@ -74,7 +76,7 @@ OPTIONS:
 - **Google (Vertex AI):** Google's preferred platform now and does not use API keys; but with `gcloud` you can create a temporary one; see [this guide](https://cloud.google.com/vertex-ai/generative-ai/docs/start/quickstarts/quickstart-multimodal).
 - **OpenAI:** Obtain a key from their API portal.
 
-Provide your API key directly with `-k` or manage it using macOS Keychain by searching for `tools.xcode.translate_strings`.
+Saved API keys in the keychain can be managed using the macOS Keychain app and searching keys prefixed with `tools.xcode.translate_strings`.
 
 ---
 
@@ -82,3 +84,10 @@ Provide your API key directly with `-k` or manage it using macOS Keychain by sea
 
 1. Run `swift build -c release` to build the `translate_strings` executable in `./.build/release`.
 2. Copy the executable to a location in your `$PATH` for easy access.
+
+## Package Targets
+
+The package has two targets:
+
+1. `strings_catalog_translate` the executable command line tool.
+2. `TranslationService` the library the executiable uses for for the translation services. It specifies the protocol and concrete types for DeepL, Google and OpenAI.

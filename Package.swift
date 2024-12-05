@@ -7,7 +7,7 @@ let package = Package(
     name: "translate_tool",
     platforms: [.macOS(.v15)],
     products: [
-        .executable(name: "translate_strings", targets: ["Translate", "TranslationServices"]),
+        .executable(name: "strings_catalog_translate", targets: ["Translate", "TranslationServices"]),
         .library(name: "TranslationServices", targets: ["TranslationServices"]),
     ],
     dependencies: [

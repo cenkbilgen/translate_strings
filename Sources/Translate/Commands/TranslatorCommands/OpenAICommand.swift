@@ -12,7 +12,7 @@ import TranslationServices
 struct OpenAI: TranslatorCommand {
     
     static func model(key: String, source: Locale.LanguageCode?) throws -> TranslatorOpenAI {
-        try TranslatorOpenAI(key: key, model: model, sourceLanguage: source)
+        try TranslatorOpenAI(key: key, model: "gpt-4o", sourceLanguage: source)
     }
     
     static let commandName = "openai"
@@ -20,13 +20,13 @@ struct OpenAI: TranslatorCommand {
     static let keyEnvVarName = "TRANSLATE_OPENAI_API_KEY"
     
     // mutable, but only setting in validation of instance, which is only once
-    nonisolated(unsafe) private(set) static var model = ""
+    // nonisolated(unsafe) private(set) static var model = ""
     
-    @Option var model: String = "gpt-4o"
+//    @Option var model: String = "gpt-4o"
     
-    func validate() throws {
-        OpenAI.model = model
-    }
+//    func validate() throws {
+//        OpenAI.model = model
+//    }
     
     static let configuration = CommandConfiguration(commandName: commandName,
                                                     abstract: "Translate using \(name) service.",

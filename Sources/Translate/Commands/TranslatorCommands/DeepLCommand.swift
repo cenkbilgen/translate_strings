@@ -10,19 +10,22 @@ import ArgumentParser
 import TranslationServices
 
 struct DeepL: TranslatorCommand {
-    static func model(key: String, source: Locale.LanguageCode?) throws -> TranslatorDeepL {
-        try TranslatorDeepL(key: key, sourceLanguage: source)
-    }
-    
     static let commandName = "deepl"
     static let name = "DeepL"
     static let keyEnvVarName = "TRANSLATE_DEEPL_API_KEY"
     
+    @OptionGroup var globalOptions: StringsCatalogGlobalOptions
+    
+    func makeTranslator() throws -> TranslatorDeepL {
+        try TranslatorDeepL(key: globalOptions.keyOptions.key,
+                            sourceLanguage: nil)
+    }
+    
     static let configuration = CommandConfiguration(commandName: commandName,
-                                                    abstract: "Translate using \(name) service.",
-                                                    subcommands: [
-                                                        TextCommand<DeepL>.self,
-                                                        StringsCatalogCommand<DeepL>.self,
-                                                        AvailableLanguagesCommand<DeepL>.self
-                                                    ])
+                                                    abstract: "Translate using \(name) service.")
+//                                                    subcommands: [
+//                                                        AvailableLanguagesCommand<DeepL>.self
+//                                                    ])
 }
+
+

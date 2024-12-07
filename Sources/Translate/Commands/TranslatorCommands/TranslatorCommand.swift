@@ -14,17 +14,20 @@ protocol TranslatorCommand: AsyncParsableCommand {
     static var name: String { get }
     static var commandName: String { get }
     static var keyEnvVarName: String { get }
+    
+    var globalOptions: StringsCatalogGlobalOptions { get}
+    
     associatedtype T: Translator
-    static func model(key: String, source: Locale.LanguageCode?) throws -> T
+    func makeTranslator() throws -> T
 }
 
-// TODO: Use os_log
-protocol VerbosePrinter {}
-    
-extension VerbosePrinter {
-    func printVerbose(_ verbose: Bool, _ string: String) {
-        if verbose {
-            print(string)
-        }
-    }
-}
+//// TODO: Use os_log
+//protocol VerbosePrinter {}
+//    
+//extension VerbosePrinter {
+//    func printVerbose(_ verbose: Bool, _ string: String) {
+//        if verbose {
+//            print(string)
+//        }
+//    }
+//}

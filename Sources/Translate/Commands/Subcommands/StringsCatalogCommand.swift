@@ -10,13 +10,20 @@ import ArgumentParser
 import TranslationServices
 import StringsCatalogKit
 
-struct StringsCatalogCommand<C: TranslatorCommand>: AsyncParsableCommand, VerbosePrinter {
+protocol StringsCatalogCommand {}
+
+extension TranslatorCommand where Self: StringsCatalogCommand {
     static var configuration: CommandConfiguration {
-        CommandConfiguration(commandName: C.commandName,
-                             abstract: "Translate Xcode Strings Catalog using \(C.name) service.")
+        CommandConfiguration(commandName: commandName,
+                             abstract: "Translate Xcode Strings Catalog using \(name) service.")
     }
     
-    @OptionGroup var globalOptions: StringsCatalogGlobalOptions
+    func printVerbose(_ string: String) {
+        if globalOptions.verbose {
+            print(string)
+        }
+    }
+    
     
     mutating func run() async throws {
         let url = URL(fileURLWithPath: globalOptions.inputFile)
@@ -33,22 +40,24 @@ struct StringsCatalogCommand<C: TranslatorCommand>: AsyncParsableCommand, Verbos
         print("Translating \(sourceCode) to \(targetCode)")
 #endif
         
-        let key = try KeyArgumentParser.parse(value: globalOptions.keyOptions.key, envVarName: C.keyEnvVarName, allowSTDIN: true)
+        let key = try KeyArgumentParser.parse(value: globalOptions.keyOptions.key,
+                                              envVarName: Self.keyEnvVarName,
+                                              allowSTDIN: true)
 #if DEBUG
-        printVerbose(globalOptions.verbose, "Using key \(key)")
+        printVerbose("Using key \(key)")
 #endif
-        let translator = try C.model(key: key, source: sourceCode)
+        let translator = try makeTranslator()
         
-        printVerbose(globalOptions.verbose, "Parsing file \(url.lastPathComponent)")
+        printVerbose("Parsing file \(url.lastPathComponent)")
         let stringKeys = catalog.strings.keys
         
         let untranslatedStringKeys = try stringKeys.filter { key in
             let translation = try catalog.getTranslation(key: key, language: targetCode.identifier)
             return translation == nil
         }
-        printVerbose(globalOptions.verbose, ("Untranslated string keys:"))
-        printVerbose(globalOptions.verbose, untranslatedStringKeys.joined(separator: "\n"))
-        printVerbose(globalOptions.verbose, "----------------------------------------")
+        printVerbose("Untranslated string keys:")
+        printVerbose(untranslatedStringKeys.joined(separator: "\n"))
+        printVerbose("----------------------------------------")
         
         // NOTE: Send translation in batches of 10 at a time,
         // arbitrary balance between minimizing network calls and not doing too much at once
@@ -64,7 +73,7 @@ struct StringsCatalogCommand<C: TranslatorCommand>: AsyncParsableCommand, Verbos
                 throw TranslatorError.missingResponses
             }
             for index in texts.indices {
-                printVerbose(globalOptions.verbose, "\(texts[index]) -> \(translations[index])")
+                printVerbose("\(texts[index]) -> \(translations[index])")
                 try catalog
                     .addTranslation(
                         key: texts[index],
@@ -83,7 +92,7 @@ struct StringsCatalogCommand<C: TranslatorCommand>: AsyncParsableCommand, Verbos
             print(string)
         } else {
             try output.write(to: URL(filePath: outFile))
-            printVerbose(globalOptions.verbose, "New strings catalog file written to \(outFile)")
+            printVerbose("New strings catalog file written to \(outFile)")
         }
     }
 }

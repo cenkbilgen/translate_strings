@@ -15,7 +15,10 @@ protocol StringsCatalogCommand {}
 extension TranslatorCommand where Self: StringsCatalogCommand {
     static var configuration: CommandConfiguration {
         CommandConfiguration(commandName: commandName,
-                             abstract: "Translate Xcode Strings Catalog using \(name) service.")
+                             abstract: "Translate Xcode Strings Catalog using \(name) service.",
+                             subcommands: [
+                                AvailableLanguagesCommand<Self>.self
+                             ])
     }
     
     func printVerbose(_ string: String) {
@@ -23,7 +26,6 @@ extension TranslatorCommand where Self: StringsCatalogCommand {
             print(string)
         }
     }
-    
     
     mutating func run() async throws {
         let url = URL(fileURLWithPath: globalOptions.inputFile)

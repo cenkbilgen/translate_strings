@@ -20,14 +20,3 @@ protocol TranslatorCommand: AsyncParsableCommand {
     associatedtype T: Translator
     func makeTranslator() throws -> T
 }
-
-//// TODO: Use os_log
-//protocol VerbosePrinter {}
-//    
-//extension VerbosePrinter {
-//    func printVerbose(_ verbose: Bool, _ string: String) {
-//        if verbose {
-//            print(string)
-//        }
-//    }
-//}

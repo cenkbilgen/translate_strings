@@ -13,7 +13,8 @@ let package = Package(
     dependencies: [
         .package(url: "https://github.com/apple/swift-argument-parser.git", from: "1.5.0"),
         .package(url: "https://github.com/apple/swift-algorithms.git", from: "1.2.0"),
-        .package(url: "https://github.com/cenkbilgen/StringsCatalogKit.git", from: "1.0.0")
+        .package(url: "https://github.com/cenkbilgen/StringsCatalogKit.git", from: "1.0.0"),
+        .package(url: "https://github.com/cenkbilgen/KeychainSimple.git", from: "1.0.0")
     ],
     targets: [
         .executableTarget(
@@ -21,6 +22,7 @@ let package = Package(
             dependencies: [
                 "TranslationServices",
                 .product(name: "StringsCatalogKit", package: "StringsCatalogKit"),
+                .product(name: "KeychainSimple", package: "KeychainSimple"),
                 .product(name: "ArgumentParser", package: "swift-argument-parser"),
                 .product(name: "Algorithms", package: "swift-algorithms"),
             ],
@@ -30,6 +32,8 @@ let package = Package(
             ]
         ),
         .target(name: "TranslationServices",
+                dependencies: [
+                ],
                 path: "Sources/TranslationServices",
                 swiftSettings: [
                     .unsafeFlags(["-warnings-as-errors"], .when(configuration: .debug)),

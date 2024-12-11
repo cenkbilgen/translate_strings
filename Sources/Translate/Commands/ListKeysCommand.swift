@@ -8,13 +8,14 @@
 import Foundation
 import ArgumentParser
 import TranslationServices
+import KeychainSimple
 
 struct ListKeysCommand: AsyncParsableCommand {
     static let configuration = CommandConfiguration(commandName: "list_keys",
                                                     abstract: "List API keys stored in Keychain.")
 
     mutating func run() async throws {
-        let itemIds = try  KeychainItem.searchItems()
+        let itemIds = try  Keychain.access.searchItems()
         if itemIds.isEmpty {
             print("No saved keys found.")
         } else {

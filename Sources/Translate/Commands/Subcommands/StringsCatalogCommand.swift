@@ -44,7 +44,7 @@ extension TranslatorCommand where Self: StringsCatalogCommand {
         
         let key = try KeyArgumentParser.parse(value: globalOptions.keyOptions.key,
                                               envVarName: Self.keyEnvVarName,
-                                              allowSTDIN: true)
+                                              onlyInteractive: true)
 #if DEBUG
         printVerbose("Using key \(key)")
 #endif

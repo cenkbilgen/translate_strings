@@ -115,6 +115,7 @@ extension StringsCatalogCommand {
             let texts = Array(chunk)
             let translations = try await translator.translate(
                 texts: texts,
+                sourceLanguage: sourceCode,
                 targetLanguage: targetCode
             )
             guard texts.count == translations.count else {

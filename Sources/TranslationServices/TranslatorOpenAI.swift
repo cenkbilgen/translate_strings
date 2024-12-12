@@ -11,21 +11,13 @@ public struct TranslatorOpenAI: Translator, ModelSelectable {
     // See: https://platform.openai.com/docs/api-reference/chat/create
 
     let key: String
-    let baseURL: URL
+    let baseURL = URL(string: "https://api.openai.com/v1")!
     let model: String
     
-    public let sourceLanguage: Locale.LanguageCode?
-
     // TODO: Make model enum
-    public init(key: String, model: String, sourceLanguage: Locale.LanguageCode?) throws {
+    public init(key: String, model: String) throws {
         self.key = key
         self.model = model
-//        guard let sourceLanguage else {
-//            throw TranslatorError.sourceLanguageRequired
-//        }
-        self.sourceLanguage = sourceLanguage
-//        self.baseURL = URL(string: "https://api.openai.com/v1/chat/completions")!
-        self.baseURL = URL(string: "https://api.openai.com/v1")!
     }
     
     // NOTE: Used in Request and Response
@@ -129,19 +121,18 @@ public struct TranslatorOpenAI: Translator, ModelSelectable {
         return Set(languages.data)
     }
 
-    public func translate(texts: [String], targetLanguage: Locale.LanguageCode) async throws -> [String] {
+    public func translate(texts: [String],
+                          sourceLanguage sourceLangauge: Locale.LanguageCode?,
+                          targetLanguage: Locale.LanguageCode) async throws -> [String] {
         guard texts.count <= 50 else {
             throw TranslatorError.overTextCountLimit
-        }
-        guard let sourceLanguage else {
-            throw TranslatorError.sourceLanguageRequired
         }
         guard let textsJSON = String(data: try NetService.encoder.encode(texts), encoding: .utf8) else {
             throw TranslatorError.invalidInput
         }
 
         let request = try makePromptRequest(
-            prompt: "Translate a JSON list of strings from langauge code \(sourceLanguage) to language with code \(targetLanguage). Your output must also be an unformatted list of JSON with a top-level array. Here is the list: \(textsJSON)"
+            prompt: "Translate a JSON list of strings from langauge code \(sourceLangauge?.identifier ?? "automatically detected from the text") to language with code \(targetLanguage). Your output must also be an unformatted list of JSON with a top-level array. Here is the list: \(textsJSON)"
         )
 
         let body: ResponseBody = try await send(request: request, decoder: NetService.decoder)

@@ -19,7 +19,7 @@ struct DeepL: StringsCatalogCommand {
     @OptionGroup var targetLanguageOptions: TargetTranslationOptions
         
     func makeTranslator(key: String) async throws -> TranslatorDeepL {
-        try TranslatorDeepL(key: key, sourceLanguage: nil)
+        try TranslatorDeepL(key: key)
     }
 }
 

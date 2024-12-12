@@ -17,11 +17,11 @@ struct DeepL: StringsCatalogCommand {
     @OptionGroup var globalOptions: StringsCatalogGlobalOptions
     @OptionGroup var fileOptions: FileOptions
     @OptionGroup var targetLanguageOptions: TargetTranslationOptions
-    
-    
-    func makeTranslator() throws -> TranslatorDeepL {
-        try TranslatorDeepL(key: globalOptions.keyOptions.key,
-                            sourceLanguage: nil)
+        
+    func makeTranslator() async throws -> TranslatorDeepL {
+        let key = try await getKeyValue()
+        return try TranslatorDeepL(key: key,
+                                   sourceLanguage: nil)
     }
 }
 

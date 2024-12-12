@@ -15,7 +15,7 @@ struct ListKeysCommand: AsyncParsableCommand {
                                                     abstract: "List API keys stored in Keychain.")
 
     mutating func run() async throws {
-        let itemIds = try  Keychain.access.searchItems()
+        let itemIds = try await Keychain.access.searchItems()
         if itemIds.isEmpty {
             print("No saved keys found.")
         } else {

@@ -19,11 +19,11 @@ protocol StringsCatalogCommand: AsyncParsableCommand, TranslatorMaker {
     var globalOptions: StringsCatalogGlobalOptions { get}
     var fileOptions: FileOptions { get }
     var targetLanguageOptions: TargetTranslationOptions { get }
-}
+    }
 
 protocol TranslatorMaker {
     associatedtype T: Translator
-    func makeTranslator() throws -> T
+    func makeTranslator() async throws -> T
 }
 
 extension StringsCatalogCommand {
@@ -47,14 +47,19 @@ extension StringsCatalogCommand {
         #endif
     }
     
-    mutating func run() async throws {
-        let key = try KeyArgumentParser.parse(value: globalOptions.keyOptions.key,
-                                              envVarName: Self.keyEnvVarName,
-                                              onlyInteractive: true)
+    func getKeyValue() async throws -> String {
+        let parsedKeyType = try KeyArgumentParser.parse(value: globalOptions.keyOptions.key)
+        let key = try await KeyArgumentParser.getKeyValue(parsed: parsedKeyType)
+        
 #if DEBUG
-        printVerbose("Using key \(key)")
+        print(parsedKeyType)
+        print("Using key \(key)")
 #endif
-        let translator = try makeTranslator()
+        return key
+    }
+    
+    mutating func run() async throws {
+        let translator = try await makeTranslator()
         
         if globalOptions.getAvailableLanguages {
             let languages = try await translator.availableLanguageCodes()

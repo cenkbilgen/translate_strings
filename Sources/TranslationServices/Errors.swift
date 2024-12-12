@@ -22,6 +22,7 @@ public enum TranslatorError: Error {
     case invalidURL
     case invalidInput
     case sourceLanguageRequired
+    case unexpectedResponseFormat
 }
 
 // AI generated

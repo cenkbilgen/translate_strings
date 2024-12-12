@@ -43,7 +43,7 @@ struct TargetTranslationOptions: ParsableArguments {
     @Option(name: .shortAndLong,
             help: "The target language identifier, ie \"de\". Case-insensitive."
     )
-    var targetLanguage: String = "xxx"
+    var targetLanguage: String?
 }
 
 //struct SourceTranslationOptions: ParsableArguments {

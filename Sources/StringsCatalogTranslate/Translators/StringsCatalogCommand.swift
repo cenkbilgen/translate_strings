@@ -83,11 +83,10 @@ extension StringsCatalogCommand {
             throw TranslatorError.unrecognizedSourceLanguage
         }
                 
-//        guard let targetLanguage = targetLanguageOptions.targetLanguage else {
-//            print("a target language argument is required when running \(Self.commandName) command")
-//            throw MainCommand.Error.missingRequiredArgument("targetLanguage")
-//        }
-        let targetLanguage = targetLanguageOptions.targetLanguage
+        guard let targetLanguage = targetLanguageOptions.targetLanguage else {
+            print("a target language argument is required when running \(Self.commandName) command")
+            throw MainCommand.Error.missingRequiredArgument("targetLanguage")
+        }
         guard let targetCode = Locale(identifier: targetLanguage).language.languageCode else {
             throw TranslatorError.unrecognizedTargetLanguage
         }

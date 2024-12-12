@@ -14,7 +14,6 @@ public struct TranslatorOpenAI: Translator, ModelSelectable {
     let baseURL = URL(string: "https://api.openai.com/v1")!
     let model: String
     
-    // TODO: Make model enum
     public init(key: String, model: String) throws {
         self.key = key
         self.model = model
@@ -62,27 +61,27 @@ public struct TranslatorOpenAI: Translator, ModelSelectable {
                 struct JSONSchema: Encodable {
                     let name = "StringArrayObject" // OpenAI requires, not part of spec
                     let strict = true
-                    let schema = Schema()
-                    struct Schema: Encodable {
-                        let type = "object"
-                        let additionalProperties: Bool = false
-                        let required: [String] = ["data"]
-                        let properties = Properties()
-                        struct Properties: Encodable {
-                            let data = StringArraySchema()
-                        }
-                        // NOTE: specifying camel case doesn't effect encoding, even with custom encoder init
-//                        enum CodingKeys: String, CodingKey {
-//                            case additionalProperties = "additionalProperties"
-//                            case type, required, properties
+                    let schema = LLM.Schema()
+//                    struct Schema: Encodable {
+//                        let type = "object"
+//                        let additionalProperties: Bool = false
+//                        let required: [String] = ["data"]
+//                        let properties = Properties()
+//                        struct Properties: Encodable {
+//                            let data = StringArraySchema()
 //                        }
-                    }
-                    struct StringArraySchema: Encodable {
-                        let type = "array"
-                        let items = [
-                            "type": "string"
-                        ]
-                    }
+//                        // NOTE: specifying camel case doesn't effect encoding, even with custom encoder init
+////                        enum CodingKeys: String, CodingKey {
+////                            case additionalProperties = "additionalProperties"
+////                            case type, required, properties
+////                        }
+//                    }
+//                    struct StringArraySchema: Encodable {
+//                        let type = "array"
+//                        let items = [
+//                            "type": "string"
+//                        ]
+//                    }
                 }
             }
             let response_format = ResponseFormat() //ResponseFormat()

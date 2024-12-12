@@ -3,7 +3,7 @@ import ArgumentParser
 
 @main
 struct MainCommand: AsyncParsableCommand {
-    static let version = "2.5.0"
+    static let version = "3.0.0"
         
     static let configuration = CommandConfiguration(
         commandName: "strings_catalog_translate",
@@ -11,6 +11,7 @@ struct MainCommand: AsyncParsableCommand {
         version: version,
         subcommands: [
             DeepL.self,
+            Anthropic.self,
             OpenAI.self,
             ListKeysCommand.self,
         ],

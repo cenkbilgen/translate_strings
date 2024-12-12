@@ -55,7 +55,7 @@ enum KeyArgumentParser {
     private static func promptForKeyValue(keyId: String, onlyInteractive: Bool) throws -> String {
         
         print("No key entry with id \"\(keyId)\" is stored. Creating one now.")
-        let key = try SecureInput.read(prompt: "Enter the key to store as id \(keyId)",
+        let key = try SecureInput.read(prompt: "Enter the key to store as id \(keyId): ",
                                        echoInput: false,
                                        onlyInteractiveInput: onlyInteractive,
                                        allocationSize: 512)

@@ -15,14 +15,10 @@ public struct TranslatorGoogleVertex: Translator {
     let baseURL: URL
     let runLocation: String = "us-central1" // from GCP
     let projectId: String
-    public let sourceLanguage: Locale.LanguageCode?
 
-    public init(key: String, projectId: String?, sourceLanguage: Locale.LanguageCode?) throws {
+    public init(key: String,
+                projectId: String?) throws {
         self.key = key
-//        guard let sourceLanguage else {
-//            throw TranslatorError.sourceLanguageRequired
-//        }
-        self.sourceLanguage = sourceLanguage
         guard let projectId,
               let baseURL = URL(string:  "https://\(runLocation)-aiplatform.googleapis.com/v1/projects/\(projectId)/locations/\(runLocation)/publishers/google/models/cloud-translate-text:predict") else {
             throw TranslatorError.invalidURL
@@ -86,14 +82,16 @@ public struct TranslatorGoogleVertex: Translator {
         return []
     }
 
-    public func translate(texts: [String], targetLanguage: Locale.LanguageCode) async throws -> [String] {
-        guard let sourceLanguage else {
+    public func translate(texts: [String],
+                          sourceLanguage sourceLanugage: Locale.LanguageCode?,
+                          targetLanguage: Locale.LanguageCode) async throws -> [String] {
+        guard let sourceLanugage else {
             throw TranslatorError.sourceLanguageRequired
         }
         
         let request = try makeRequest(
             texts: texts,
-            sourceLanguage: sourceLanguage,
+            sourceLanguage: sourceLanugage,
             targetLanguage: targetLanguage
         )
 

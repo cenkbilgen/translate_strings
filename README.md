@@ -4,14 +4,14 @@
 
 # translate_strings
 
-A command-line tool for automatically adding new language translations to your Xcode project's Strings Catalog file using DeepL, Google AI, or OpenAI services.
+A tool for Xcode to automatically add language translations to your Strings Catalog file using DeepL, Anthropic Claude, or OpenAI services.
 
 ## Getting Started
 
-To translate all strings in your app to Japanese using DeepL for translation, call:
+To translate all strings in your app to Japanese using default DeepL for translation, call:
 
 ```shell
-strings_catalog_translate deepl -k [API_KEY] -t ja
+strings_catalog_translate -k [API_KEY] -t ja
 ```
 
 Ensure that the initial Strings Catalog file is added to your Xcode project. More details can be found [here](https://developer.apple.com/documentation/xcode/localizing-and-varying-text-with-a-string-catalog).
@@ -21,7 +21,7 @@ By default the command will read the `Localizable.xcstrings` from the path where
 ### Usage
 
 ```
-OVERVIEW: A utility for language translation of Xcode Strings Catalogs. (DEBUG BUILD)
+OVERVIEW: A utility for language translation of Xcode Strings Catalogs. 
 
 USAGE: strings_catalog_translate <subcommand>
 
@@ -30,9 +30,9 @@ OPTIONS:
   -h, --help              Show help information.
 
 SUBCOMMANDS:
-  deepl                   Translate Xcode Strings Catalog using DeepL service.
-  openai (default)        Translate Xcode Strings Catalog using OpenAI service.
-  google                  Translate Xcode Strings Catalog using Google Gemini service.
+  deepl (default)         Translate Xcode Strings Catalog using DeepL service.
+  anthropic               Translate Xcode Strings Catalog using Anthropic service.
+  openai                  Translate Xcode Strings Catalog using OpenAI service.
   list_keys               List API keys stored in Keychain.
 
   See 'strings_catalog_translate help <subcommand>' for detailed help.
@@ -41,31 +41,33 @@ SUBCOMMANDS:
 The subcommands have mostly the same arguments, with a few platform specific variations.
 
 ```
-OVERVIEW: Translate Xcode Strings Catalog using OpenAI service.
+% ./.build/release/strings_catalog_translate anthropic -h
 
-USAGE: strings_catalog_translate openai [--verbose] --key <key> --target-language <target-language> [--input-file <input-file>] [--output-file <output-file>]
+OVERVIEW: Translate Xcode Strings Catalog using Anthropic service.
+
+USAGE: strings_catalog_translate anthropic [--verbose] --key <key> [--available_languages] [--input-file <input-file>] [--output-file <output-file>] [--target-language <target-language>] [--model <model>]
 
 OPTIONS:
   -v, --verbose           Verbose output to STDOUT
   -k, --key <key>         --key <key> (Required)
                           The API key used for authentication. You can provide it in one of two ways:
-
                           1. From Keychain:
                              Use the format `key_id:[YOUR_KEY_ID]` (e.g., `key_id:key1`). The tool will search for the specified `YOUR_KEY_ID` in the keychain.
                              - If the key isn't found, you will be prompted to enter it.
                              - The entered key will be securely saved under the provided `YOUR_KEY_ID` for future use.
-
                           2. Direct Value:
                              Simply pass the API key as a literal string without any format (e.g., `--key your-api-key`).
-
-  -t, --target-language <target-language>
-                          The target language identifier, ie "de". Case-insensitive. Required.
+  --available_languages   List available translation language codes for service.
   -i, --input-file <input-file>
                           Input Strings Catalog file. (default: Localizable.xcstrings)
   -o, --output-file <output-file>
                           Output Strings Catalog file. Overwrites. Use "-" for STDOUT. (default: Localizable.xcstrings)
+  -t, --target-language <target-language>
+                          The target language identifier, ie "de". Case-insensitive.
+  --model <model>         (default: claude-3-5-haiku-latest)
   --version               Show the version.
   -h, --help              Show help information.
+
 ```
 
 **Notes:** 
@@ -76,9 +78,8 @@ OPTIONS:
 ### API Keys
 
 - **DeepL:** Get a key from the [DeepL Pro API](https://www.deepl.com/en/pro-api/).
-- **Google (Gemini):** Create an API key as instructed [here](https://ai.google.dev/gemini-api/docs/api-key).
-- **Google (Vertex AI):** Google's preferred platform now and does not use API keys; but with `gcloud` you can create a temporary one; see [this guide](https://cloud.google.com/vertex-ai/generative-ai/docs/start/quickstarts/quickstart-multimodal).
-- **OpenAI:** Obtain a key from their API portal.
+- **Anthropic** Get a key from [Anthropic Dashboard](https://console.anthropic.com/dashboard)
+- **OpenAI:** Obtain a key from their [API portal](https://openai.com/api/).
 
 Saved API keys in the keychain can be managed using the macOS Keychain app and searching keys prefixed with `tools.xcode.translate_strings`.
 
@@ -94,4 +95,4 @@ Saved API keys in the keychain can be managed using the macOS Keychain app and s
 The package has two targets:
 
 1. `strings_catalog_translate` the executable command line tool.
-2. `TranslationService` the library the executiable uses for for the translation services. It specifies the protocol and concrete types for DeepL, Google and OpenAI.
+2. `TranslationService` the library the executiable uses for for the translation services. It specifies the protocol and concrete types for DeepL, Anthropic and OpenAI.

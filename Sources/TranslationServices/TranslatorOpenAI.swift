@@ -7,24 +7,16 @@
 
 import Foundation
 
-public struct TranslatorOpenAI: Translator {
+public struct TranslatorOpenAI: Translator, ModelSelectable {
     // See: https://platform.openai.com/docs/api-reference/chat/create
 
     let key: String
-    let baseURL: URL
+    let baseURL = URL(string: "https://api.openai.com/v1")!
     let model: String
     
-    public let sourceLanguage: Locale.LanguageCode?
-
-    // TODO: Make model enum
-    public init(key: String, model: String, sourceLanguage: Locale.LanguageCode?) throws {
+    public init(key: String, model: String) throws {
         self.key = key
         self.model = model
-//        guard let sourceLanguage else {
-//            throw TranslatorError.sourceLanguageRequired
-//        }
-        self.sourceLanguage = sourceLanguage
-        self.baseURL = URL(string: "https://api.openai.com/v1/chat/completions")!
     }
     
     // NOTE: Used in Request and Response
@@ -35,13 +27,17 @@ public struct TranslatorOpenAI: Translator {
         }
         let content: String
     }
-
-    func makeRequest(prompt: String) throws -> URLRequest {
-        var request = URLRequest(url: baseURL)
+    
+    func makeRequest(path: String) -> URLRequest {
+        var request = URLRequest(url: baseURL.appending(path: path))
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.setValue("Bearer \(key)", forHTTPHeaderField: "Authorization")
+        return request
+    }
 
+    func makePromptRequest(prompt: String) throws -> URLRequest {
+        var request = makeRequest(path: "chat/completions")
         struct Body: Encodable {
             let model: String
             let messages: [Message]
@@ -65,27 +61,27 @@ public struct TranslatorOpenAI: Translator {
                 struct JSONSchema: Encodable {
                     let name = "StringArrayObject" // OpenAI requires, not part of spec
                     let strict = true
-                    let schema = Schema()
-                    struct Schema: Encodable {
-                        let type = "object"
-                        let additionalProperties: Bool = false
-                        let required: [String] = ["data"]
-                        let properties = Properties()
-                        struct Properties: Encodable {
-                            let data = StringArraySchema()
-                        }
-                        // NOTE: specifying camel case doesn't effect encoding, even with custom encoder init
-//                        enum CodingKeys: String, CodingKey {
-//                            case additionalProperties = "additionalProperties"
-//                            case type, required, properties
+                    let schema = LLM.Schema()
+//                    struct Schema: Encodable {
+//                        let type = "object"
+//                        let additionalProperties: Bool = false
+//                        let required: [String] = ["data"]
+//                        let properties = Properties()
+//                        struct Properties: Encodable {
+//                            let data = StringArraySchema()
 //                        }
-                    }
-                    struct StringArraySchema: Encodable {
-                        let type = "array"
-                        let items = [
-                            "type": "string"
-                        ]
-                    }
+//                        // NOTE: specifying camel case doesn't effect encoding, even with custom encoder init
+////                        enum CodingKeys: String, CodingKey {
+////                            case additionalProperties = "additionalProperties"
+////                            case type, required, properties
+////                        }
+//                    }
+//                    struct StringArraySchema: Encodable {
+//                        let type = "array"
+//                        let items = [
+//                            "type": "string"
+//                        ]
+//                    }
                 }
             }
             let response_format = ResponseFormat() //ResponseFormat()
@@ -113,7 +109,7 @@ public struct TranslatorOpenAI: Translator {
     }
 
     public func availableLanguageCodes() async throws -> Set<String> {
-        let request = try makeRequest(
+        let request = try makePromptRequest(
             prompt: "List all written langauges you as an llm can translate to. Your output must be a JSON array of strings. Each language as it's IETF BCP 47 language code.")
         let body: ResponseBody = try await send(request: request, decoder: NetService.decoder)
         guard let text = body.choices.first?.message.content,
@@ -124,19 +120,18 @@ public struct TranslatorOpenAI: Translator {
         return Set(languages.data)
     }
 
-    public func translate(texts: [String], targetLanguage: Locale.LanguageCode) async throws -> [String] {
+    public func translate(texts: [String],
+                          sourceLanguage sourceLangauge: Locale.LanguageCode?,
+                          targetLanguage: Locale.LanguageCode) async throws -> [String] {
         guard texts.count <= 50 else {
             throw TranslatorError.overTextCountLimit
-        }
-        guard let sourceLanguage else {
-            throw TranslatorError.sourceLanguageRequired
         }
         guard let textsJSON = String(data: try NetService.encoder.encode(texts), encoding: .utf8) else {
             throw TranslatorError.invalidInput
         }
 
-        let request = try makeRequest(
-            prompt: "Translate a JSON list of strings from langauge code \(sourceLanguage) to language with code \(targetLanguage). Your output must also be an unformatted list of JSON with a top-level array. Here is the list: \(textsJSON)"
+        let request = try makePromptRequest(
+            prompt: "Translate a JSON list of strings from langauge code \(sourceLangauge?.identifier ?? "automatically detected from the text") to language with code \(targetLanguage). Your output must also be an unformatted list of JSON with a top-level array. Here is the list: \(textsJSON)"
         )
 
         let body: ResponseBody = try await send(request: request, decoder: NetService.decoder)
@@ -147,4 +142,31 @@ public struct TranslatorOpenAI: Translator {
         let results = try JSONDecoder().decode(Content.self, from: data)
         return results.data
     }
+    
+    // MARK: ModelSelectable
+    
+    public func listModels() async throws -> Set<String> {
+        let request = makeRequest(path: "models")
+        
+        /*
+         data": [
+             {
+               "id": "model-id-0",
+               "object": "model",
+               "created": 1686935002,
+               "owned_by": "organization-owner"
+             },
+         */
+        
+        struct ResponseBody: Decodable {
+            let data: [Model]
+            struct Model: Decodable {
+                let id: String
+            }
+        }
+        
+        let body: ResponseBody = try await send(request: request)
+        return Set(body.data.map(\.id))
+    }
+
 }

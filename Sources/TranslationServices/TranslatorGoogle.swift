@@ -19,13 +19,12 @@ public struct TranslatorGoogle: Translator {
 
     let key: String
     let baseURL: URL
-    public let sourceLanguage: Locale.LanguageCode?
+    public let sourceLanguage: Locale.LanguageCode
 
-    public init(key: String, projectId: String? = nil, sourceLanguage: Locale.LanguageCode?) throws {
+    public init(key: String,
+                projectId: String? = nil, s
+                sourceLanguage: Locale.LanguageCode) throws {
         self.key = key
-//        guard let sourceLanguage else {
-//            throw TranslatorError.sourceLanguageRequired
-//        }
         self.sourceLanguage = sourceLanguage
         guard let baseURL = URL(string: "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=\(key)") else {
             throw TranslatorError.invalidURL
@@ -156,7 +155,9 @@ public struct TranslatorGoogle: Translator {
 
      */
 
-    public func translate(texts: [String], targetLanguage: Locale.LanguageCode) async throws -> [String] {
+    public func translate(texts: [String],
+                          sourceLanguage: Locale.LanguageCode?,
+                          targetLanguage: Locale.LanguageCode) async throws -> [String] {
         guard texts.count <= 50 else {
             throw TranslatorError.overTextCountLimit
         }

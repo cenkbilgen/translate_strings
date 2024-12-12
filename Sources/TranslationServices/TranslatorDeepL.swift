@@ -13,11 +13,8 @@ public struct TranslatorDeepL: Translator {
     let key: String
 
     // see https://developers.deepl.com/docs/resources/supported-languages#source-languages
-    public let sourceLanguage: Locale.LanguageCode?
-
-    public init(key: String, projectId: String? = nil, sourceLanguage: Locale.LanguageCode?) throws {
+    public init(key: String) throws {
         self.key = key
-        self.sourceLanguage = sourceLanguage
     }
 
     let baseURL = URL(string: "https://api-free.deepl.com/v2/")!
@@ -29,7 +26,9 @@ public struct TranslatorDeepL: Translator {
         return request
     }
 
-    func makeRequestBody(texts: [String], targetLanguage: Locale.LanguageCode) throws -> Data {
+    func makeRequestBody(texts: [String],
+                         sourceLanguage: Locale.LanguageCode?,
+                         targetLanguage: Locale.LanguageCode) throws -> Data {
         guard texts.count <= 50 else {
             throw TranslatorError.unsupportedRequest
         }
@@ -59,11 +58,14 @@ public struct TranslatorDeepL: Translator {
         return Set(body.map(\.language))
     }
 
-    public func translate(texts: [String], targetLanguage: Locale.LanguageCode) async throws -> [String] {
+    public func translate(texts: [String],
+                          sourceLanguage: Locale.LanguageCode?,
+                          targetLanguage: Locale.LanguageCode) async throws -> [String] {
         var request = makeRequest(path: "translate")
         request.httpMethod = "POST"
         request.httpBody = try makeRequestBody(
             texts: texts,
+            sourceLanguage: sourceLanguage,
             targetLanguage: targetLanguage
         )
         let (data, response) = try await URLSession.shared.data(for: request)

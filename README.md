@@ -1,3 +1,7 @@
+[![](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2Fcenkbilgen%2Ftranslate_strings%2Fbadge%3Ftype%3Dplatforms)](https://swiftpackageindex.com/cenkbilgen/translate_strings)
+[![](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2Fcenkbilgen%2Ftranslate_strings%2Fbadge%3Ftype%3Dswift-versions)](https://swiftpackageindex.com/cenkbilgen/translate_strings)
+
+
 # translate_strings
 
 A tool for Xcode to automatically add language translations to your Strings Catalog file using DeepL, Anthropic Claude, or OpenAI services.

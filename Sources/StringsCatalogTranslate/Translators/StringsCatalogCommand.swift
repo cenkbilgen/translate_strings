@@ -7,18 +7,25 @@
 
 import Foundation
 import ArgumentParser
+import Algorithms
 import TranslationServices
 import StringsCatalogKit
 
-protocol StringsCatalogCommand {}
+protocol StringsCatalogCommand: AsyncParsableCommand {
+    static var name: String { get }
+    static var commandName: String { get }
+    static var keyEnvVarName: String { get }
+    
+    var globalOptions: StringsCatalogGlobalOptions { get}
+    
+    associatedtype T: Translator
+    func makeTranslator() throws -> T
+}
 
-extension TranslatorCommand where Self: StringsCatalogCommand {
+extension StringsCatalogCommand {
     static var configuration: CommandConfiguration {
         CommandConfiguration(commandName: commandName,
-                             abstract: "Translate Xcode Strings Catalog using \(name) service.",
-                             subcommands: [
-                                AvailableLanguagesCommand<Self>.self
-                             ])
+                             abstract: "Translate Xcode Strings Catalog using \(name) service.")
     }
     
     func printVerbose(_ string: String) {

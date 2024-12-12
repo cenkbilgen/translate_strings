@@ -9,10 +9,10 @@ import Foundation
 import ArgumentParser
 import TranslationServices
 
-struct DeepL: TranslatorCommand {
+struct DeepL: StringsCatalogCommand {
     static let commandName = "deepl"
     static let name = "DeepL"
-    static let keyEnvVarName = "TRANSLATE_DEEPL_API_KEY"
+    static let keyEnvVarName = "DEEPL_API_KEY"
     
     @OptionGroup var globalOptions: StringsCatalogGlobalOptions
     
@@ -20,12 +20,6 @@ struct DeepL: TranslatorCommand {
         try TranslatorDeepL(key: globalOptions.keyOptions.key,
                             sourceLanguage: nil)
     }
-    
-    static let configuration = CommandConfiguration(commandName: commandName,
-                                                    abstract: "Translate using \(name) service.")
-//                                                    subcommands: [
-//                                                        AvailableLanguagesCommand<DeepL>.self
-//                                                    ])
 }
 
 

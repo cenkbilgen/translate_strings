@@ -9,10 +9,10 @@ import Foundation
 import ArgumentParser
 import TranslationServices
 
-struct OpenAI: TranslatorCommand {
+struct OpenAI: StringsCatalogCommand {
     static let commandName = "openai"
     static let name = "OpenAI"
-    static let keyEnvVarName = "TRANSLATE_OPENAI_API_KEY"
+    static let keyEnvVarName = "OPENAI_API_KEY"
     
     @OptionGroup var globalOptions: StringsCatalogGlobalOptions
     @Option var model: String = "gpt-4o"
@@ -22,7 +22,4 @@ struct OpenAI: TranslatorCommand {
                              model: model,
                              sourceLanguage: nil)
     }
-    
-    static let configuration = CommandConfiguration(commandName: commandName,
-                                                    abstract: "Translate using \(name) service.")
 }

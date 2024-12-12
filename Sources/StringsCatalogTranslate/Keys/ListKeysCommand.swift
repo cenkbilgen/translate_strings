@@ -21,7 +21,7 @@ struct ListKeysCommand: AsyncParsableCommand {
         } else {
             print(itemIds.formatted(.list(type: .and)))
             print("\n")
-            print("Edit or delete keys through the macOS \"keychain-access\" tool. Search for keys with the prefix \"tools.xcode.translate_strings.\".")
+            print("Edit or delete keys through the macOS \"keychain-access\" tool. Search for keys with the prefix \"\(Keychain.namePrefix)\".")
         }
     }
 }

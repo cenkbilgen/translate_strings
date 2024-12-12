@@ -7,7 +7,7 @@ let package = Package(
     name: "translate_tool",
     platforms: [.macOS(.v15)],
     products: [
-        .executable(name: "strings_catalog_translate", targets: ["Translate", "TranslationServices"]),
+        .executable(name: "strings_catalog_translate", targets: ["StringsCatalogTranslate", "TranslationServices"]),
         .library(name: "TranslationServices", targets: ["TranslationServices"]),
     ],
     dependencies: [
@@ -18,7 +18,7 @@ let package = Package(
     ],
     targets: [
         .executableTarget(
-            name: "Translate",
+            name: "StringsCatalogTranslate",
             dependencies: [
                 "TranslationServices",
                 .product(name: "StringsCatalogKit", package: "StringsCatalogKit"),
@@ -26,7 +26,7 @@ let package = Package(
                 .product(name: "ArgumentParser", package: "swift-argument-parser"),
                 .product(name: "Algorithms", package: "swift-algorithms"),
             ],
-            path: "Sources/Translate",
+            path: "Sources/StringsCatalogTranslate",
             swiftSettings: [
                 .unsafeFlags(["-warnings-as-errors"], .when(configuration: .debug)),
             ]

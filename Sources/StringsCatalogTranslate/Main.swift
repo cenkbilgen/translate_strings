@@ -2,7 +2,7 @@ import Foundation
 import ArgumentParser
 
 @main
-struct TranslateCommand: AsyncParsableCommand {
+struct MainCommand: AsyncParsableCommand {
     static let version = "2.5.0"
         
     static let configuration = CommandConfiguration(
@@ -22,7 +22,12 @@ struct TranslateCommand: AsyncParsableCommand {
     #else
     static let isDEBUG = false
     #endif
+    
+    // MARK: Errors
+    
+    enum Error: Swift.Error {
+        case missingRequiredArgument(String)
+    }
 }
-
 
 

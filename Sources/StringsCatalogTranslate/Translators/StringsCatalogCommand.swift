@@ -11,13 +11,17 @@ import Algorithms
 import TranslationServices
 import StringsCatalogKit
 
-protocol StringsCatalogCommand: AsyncParsableCommand {
+protocol StringsCatalogCommand: AsyncParsableCommand, TranslatorMaker {
     static var name: String { get }
     static var commandName: String { get }
     static var keyEnvVarName: String { get }
     
     var globalOptions: StringsCatalogGlobalOptions { get}
-    
+    var fileOptions: FileOptions { get }
+    var targetLanguageOptions: TargetTranslationOptions { get }
+}
+
+protocol TranslatorMaker {
     associatedtype T: Translator
     func makeTranslator() throws -> T
 }
@@ -34,21 +38,16 @@ extension StringsCatalogCommand {
         }
     }
     
+    func validate() throws {
+        // not really validating, just a convenient place for printing
+        #if DEBUG
+        print(globalOptions)
+        print(fileOptions)
+        print(targetLanguageOptions)
+        #endif
+    }
+    
     mutating func run() async throws {
-        let url = URL(fileURLWithPath: globalOptions.inputFile)
-        let catalog = try StringsCatalog.read(url: url)
-        
-        guard let sourceCode = Locale(identifier: catalog.sourceLanguage).language.languageCode else {
-            throw TranslatorError.unrecognizedSourceLanguage
-        }
-        guard let targetCode = Locale(identifier: globalOptions.translationOptions.targetLanguage).language.languageCode else {
-            throw TranslatorError.unrecognizedTargetLanguage
-        }
-        
-#if DEBUG
-        print("Translating \(sourceCode) to \(targetCode)")
-#endif
-        
         let key = try KeyArgumentParser.parse(value: globalOptions.keyOptions.key,
                                               envVarName: Self.keyEnvVarName,
                                               onlyInteractive: true)
@@ -56,6 +55,34 @@ extension StringsCatalogCommand {
         printVerbose("Using key \(key)")
 #endif
         let translator = try makeTranslator()
+        
+        if globalOptions.getAvailableLanguages {
+            let languages = try await translator.availableLanguageCodes()
+            print(languages.sorted().map {
+                $0.uppercased()
+            }.formatted(.list(type: .and)))
+            return
+        }
+        
+        let url = URL(fileURLWithPath: fileOptions.inputFile)
+        let catalog = try StringsCatalog.read(url: url)
+        
+        guard let sourceCode = Locale(identifier: catalog.sourceLanguage).language.languageCode else {
+            throw TranslatorError.unrecognizedSourceLanguage
+        }
+                
+//        guard let targetLanguage = targetLanguageOptions.targetLanguage else {
+//            print("a target language argument is required when running \(Self.commandName) command")
+//            throw MainCommand.Error.missingRequiredArgument("targetLanguage")
+//        }
+        let targetLanguage = targetLanguageOptions.targetLanguage
+        guard let targetCode = Locale(identifier: targetLanguage).language.languageCode else {
+            throw TranslatorError.unrecognizedTargetLanguage
+        }
+        
+#if DEBUG
+        print("Translating \(sourceCode) to \(targetCode)")
+#endif
         
         printVerbose("Parsing file \(url.lastPathComponent)")
         let stringKeys = catalog.strings.keys
@@ -93,7 +120,7 @@ extension StringsCatalogCommand {
         }
         
         let output = try catalog.output()
-        let outFile = globalOptions.outputFile
+        let outFile = fileOptions.outputFile
         if outFile == "-" {
             guard let string = String(data: output, encoding: .utf8) else {
                 throw TranslatorError.notUTF8

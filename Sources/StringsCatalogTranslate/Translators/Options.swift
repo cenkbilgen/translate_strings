@@ -7,6 +7,16 @@
 
 import ArgumentParser
 
+struct StringsCatalogGlobalOptions: ParsableArguments {
+    @Flag(name: .shortAndLong, help: "Verbose output to STDOUT")
+    var verbose: Bool = false
+    
+    @OptionGroup var keyOptions: KeyOptions
+    
+    @Flag(name: .customLong("available_languages"),
+          help: "List available translation language codes for service.") var getAvailableLanguages: Bool = false
+}
+
 struct KeyOptions: ParsableArguments {
     static let keyArgumentHelpText = """
     --key <key> (Required)
@@ -20,7 +30,7 @@ struct KeyOptions: ParsableArguments {
     """
 //    3. Environment Variable (NOT RECOMMENDED): Use the format `env:`. The program will look for the API key in environment variables \("DeepLCommand.keyEnvVarName") or \(GoogleCommand.keyEnvVarName).
 //    """
-
+    
     @Option(name: .shortAndLong,
             help: ArgumentHelp(stringLiteral: KeyOptions.keyArgumentHelpText)
     )
@@ -31,26 +41,19 @@ struct KeyOptions: ParsableArguments {
 
 struct TargetTranslationOptions: ParsableArguments {
     @Option(name: .shortAndLong,
-            help: "The target language identifier, ie \"de\". Case-insensitive. Required."
+            help: "The target language identifier, ie \"de\". Case-insensitive."
     )
-    var targetLanguage: String
+    var targetLanguage: String = "xxx"
 }
 
-struct SourceTranslationOptions: ParsableArguments {
-    @Option(name: .shortAndLong,
-            help: "Override autodetected source language identifier, ie \"de\". Case-insensitive."
-    )
-    var sourceLanguage: String?
-}
+//struct SourceTranslationOptions: ParsableArguments {
+//    @Option(name: .shortAndLong,
+//            help: "Override autodetected source language identifier, ie \"de\". Case-insensitive."
+//    )
+//    var sourceLanguage: String?
+//}
 
-struct StringsCatalogGlobalOptions: ParsableArguments {
-    @Flag(name: .shortAndLong, help: "Verbose output to STDOUT")
-    var verbose: Bool = false
-
-    @OptionGroup var keyOptions: KeyOptions
-
-    @OptionGroup var translationOptions: TargetTranslationOptions
-    
+struct FileOptions: ParsableArguments {
     @Option(name: .shortAndLong,
             help: "Input Strings Catalog file.",
             completion: .file(extensions: ["xcstrings"]))
@@ -62,13 +65,5 @@ struct StringsCatalogGlobalOptions: ParsableArguments {
     var outputFile: String = "Localizable.xcstrings"
 }
 
-struct TextGlobalOptions: ParsableArguments {
-    @OptionGroup var keyOptions: KeyOptions
-    
-    @OptionGroup var translationOptions: TargetTranslationOptions
-    
-    @OptionGroup var sourceTranslationOptions: SourceTranslationOptions
-    
-    @Argument(help: "The phrase to translate")
-    var input: String
-}
+
+

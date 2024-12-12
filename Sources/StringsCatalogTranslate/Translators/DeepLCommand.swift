@@ -15,6 +15,9 @@ struct DeepL: StringsCatalogCommand {
     static let keyEnvVarName = "DEEPL_API_KEY"
     
     @OptionGroup var globalOptions: StringsCatalogGlobalOptions
+    @OptionGroup var fileOptions: FileOptions
+    @OptionGroup var targetLanguageOptions: TargetTranslationOptions
+    
     
     func makeTranslator() throws -> TranslatorDeepL {
         try TranslatorDeepL(key: globalOptions.keyOptions.key,

@@ -19,10 +19,7 @@ struct OpenAI: StringsCatalogCommand {
     @OptionGroup var targetLanguageOptions: TargetTranslationOptions
     @Option var model: String = "gpt-4o"
     
-    func makeTranslator() async throws -> TranslatorOpenAI {
-        let key = try await getKeyValue()
-        return try TranslatorOpenAI(key: key,
-                             model: model,
-                             sourceLanguage: nil)
+    func makeTranslator(key: String) async throws -> TranslatorOpenAI {
+        try TranslatorOpenAI(key: key, model: model, sourceLanguage: nil)
     }
 }

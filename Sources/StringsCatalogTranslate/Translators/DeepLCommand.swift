@@ -18,10 +18,8 @@ struct DeepL: StringsCatalogCommand {
     @OptionGroup var fileOptions: FileOptions
     @OptionGroup var targetLanguageOptions: TargetTranslationOptions
         
-    func makeTranslator() async throws -> TranslatorDeepL {
-        let key = try await getKeyValue()
-        return try TranslatorDeepL(key: key,
-                                   sourceLanguage: nil)
+    func makeTranslator(key: String) async throws -> TranslatorDeepL {
+        try TranslatorDeepL(key: key, sourceLanguage: nil)
     }
 }
 

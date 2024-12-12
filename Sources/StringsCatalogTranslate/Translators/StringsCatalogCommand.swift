@@ -11,25 +11,31 @@ import Algorithms
 import TranslationServices
 import StringsCatalogKit
 
-protocol StringsCatalogCommand: AsyncParsableCommand, TranslatorMaker {
-    static var name: String { get }
+protocol StringsCatalogCommand: AsyncParsableCommand, Nameable, TranslatorMaker {
     static var commandName: String { get }
     static var keyEnvVarName: String { get }
     
     var globalOptions: StringsCatalogGlobalOptions { get}
     var fileOptions: FileOptions { get }
     var targetLanguageOptions: TargetTranslationOptions { get }
-    }
+}
+
+protocol Nameable {
+    static var name: String { get }
+}
 
 protocol TranslatorMaker {
     associatedtype T: Translator
-    func makeTranslator() async throws -> T
+    func makeTranslator(key: String) async throws -> T
 }
 
 extension StringsCatalogCommand {
     static var configuration: CommandConfiguration {
         CommandConfiguration(commandName: commandName,
-                             abstract: "Translate Xcode Strings Catalog using \(name) service.")
+                             abstract: "Translate Xcode Strings Catalog using \(name) service.",
+                             subcommands: [
+                                // AvailableLanguagesCommand.self
+                             ])
     }
     
     func printVerbose(_ string: String) {
@@ -59,7 +65,8 @@ extension StringsCatalogCommand {
     }
     
     mutating func run() async throws {
-        let translator = try await makeTranslator()
+        let key = try await getKeyValue()
+        let translator = try await makeTranslator(key: key)
         
         if globalOptions.getAvailableLanguages {
             let languages = try await translator.availableLanguageCodes()

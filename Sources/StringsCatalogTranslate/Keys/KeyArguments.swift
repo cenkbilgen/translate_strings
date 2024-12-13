@@ -43,8 +43,16 @@ enum KeyArgumentParser {
                 print("Found key with id \(keyId): \(key)")
                 return key
             } catch KeychainAccess.Error.notFound {
-                print("Prompting for new key")
-                return try promptForKeyValue(keyId: keyId, onlyInteractive: true)
+                let key = try promptForKeyValue(keyId: keyId,
+                                             onlyInteractive: false)
+                do {
+                    try await Keychain.access.save(id: keyId, value: key)
+                } catch {
+                    #if DEBUG
+                    print("Saving key failed. \(error.localizedDescription)")
+                    #endif
+                }
+                return key
             } catch {
                 print(error.localizedDescription)
                 throw error
@@ -53,15 +61,8 @@ enum KeyArgumentParser {
     }
 
     private static func promptForKeyValue(keyId: String, onlyInteractive: Bool) throws -> String {
-        
         print("No key entry with id \"\(keyId)\" is stored. Creating one now.")
-        let key = try SecureInput.read(prompt: "Enter the key to store as id \(keyId): ",
-                                       echoInput: false,
-                                       onlyInteractiveInput: onlyInteractive,
-                                       allocationSize: 512)
-        Task {
-            try Keychain.access.save(id: keyId, value: key)
-        }
+        let key = try SecureInput.read(prompt: "Enter the key to store as id \(keyId): ")
         return key
     }
     

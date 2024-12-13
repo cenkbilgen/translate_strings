@@ -7,40 +7,23 @@
 
 import Foundation
 
-public struct TranslatorOpenAI: Translator, ModelSelectable {
+public struct TranslatorOpenAI: Translator, ModelSelectable, LLMAPI {
     // See: https://platform.openai.com/docs/api-reference/chat/create
 
-    let key: String
     let baseURL = URL(string: "https://api.openai.com/v1")!
+    let headers: [String: String]
     let model: String
     
-    public init(key: String, model: String) throws {
-        self.key = key
+    public init(key: String, model: String = "gpt-4o") throws {
         self.model = model
+        self.headers = ["Authorization": "Bearer \(key)"]
     }
     
-    // NOTE: Used in Request and Response
-    struct Message: Codable {
-        let role: Role
-        enum Role: String, Codable {
-            case user, assistant, system
-        }
-        let content: String
-    }
-    
-    func makeRequest(path: String) -> URLRequest {
-        var request = URLRequest(url: baseURL.appending(path: path))
-        request.httpMethod = "POST"
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.setValue("Bearer \(key)", forHTTPHeaderField: "Authorization")
-        return request
-    }
-
     func makePromptRequest(prompt: String) throws -> URLRequest {
         var request = makeRequest(path: "chat/completions")
         struct Body: Encodable {
             let model: String
-            let messages: [Message]
+            let messages: [LLM.Message]
             let n: Int = 1
             
             /* NOTES: On structured JSON Schema response
@@ -84,12 +67,12 @@ public struct TranslatorOpenAI: Translator, ModelSelectable {
 //                    }
                 }
             }
-            let response_format = ResponseFormat() //ResponseFormat()
+            let response_format = ResponseFormat()
         }
 
         request.httpBody = try JSONEncoder().encode(Body(model: model, messages: [
-            Message(role: .system, content: #"Provide a JSON response containing an array of strings: ['example1', 'example2', 'example3']"#),
-            Message(role: .user, content: prompt)
+            LLM.Message(role: .system, content: #"Provide a JSON response containing an array of strings: ['example1', 'example2', 'example3']"#),
+            LLM.Message(role: .user, content: prompt)
         ]))
 
         return request
@@ -100,7 +83,7 @@ public struct TranslatorOpenAI: Translator, ModelSelectable {
         struct Choice: Decodable {
             let index: Int
             let finishReason: String // TODO: make enum, ie stop
-            let message: Message
+            let message: LLM.Message
         }
     }
     
@@ -110,7 +93,7 @@ public struct TranslatorOpenAI: Translator, ModelSelectable {
 
     public func availableLanguageCodes() async throws -> Set<String> {
         let request = try makePromptRequest(
-            prompt: "List all written langauges you as an llm can translate to. Your output must be a JSON array of strings. Each language as it's IETF BCP 47 language code.")
+            prompt: availableLanguagePrompt)
         let body: ResponseBody = try await send(request: request, decoder: NetService.decoder)
         guard let text = body.choices.first?.message.content,
               let data = text.data(using: .utf8) else {

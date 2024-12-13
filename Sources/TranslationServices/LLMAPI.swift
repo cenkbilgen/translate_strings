@@ -24,6 +24,10 @@ extension LLMAPI {
         return request
         // NOTE: body is empty
     }
+    
+    var availableLanguagePrompt: String {
+        "List all written langauges you as an llm can translate to. Your output must be a JSON array of strings. Each language as it's IETF BCP 47 language code with only the first part, such as DE, EN, ZH and that matches the language as it would be represented in an Xcode StringsCatalog file."
+    }
 }
 
 // General data types commonly used

@@ -117,7 +117,7 @@ public struct TranslatorAnthropic: Translator, ModelSelectable, LLMAPI {
 
     public func availableLanguageCodes() async throws -> Set<String> {
         let request = try makePromptRequest(
-            prompt: "List all written langauges you as an llm can translate to. Your output must be a JSON array of strings. Each language as it's IETF BCP 47 language code.")
+            prompt: availableLanguagePrompt)
         let body: ResponseBody = try await send(request: request, decoder: NetService.decoder)
         let languages = try decodeArray(body: body)
         return Set(languages)

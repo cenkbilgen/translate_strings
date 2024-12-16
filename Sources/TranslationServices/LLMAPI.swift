@@ -12,7 +12,7 @@ protocol LLMAPI: Translator {
     var headers: [String: String] { get }
     func makePromptRequest(prompt: String) throws -> URLRequest
     associatedtype ResponseBody: Decodable
-    func decodeAssistantReply(body: ResponseBody) throws -> String
+    func decodeStructuredReply(body: ResponseBody) throws -> LLM.Schema.StructuredContent
 }
 
 extension LLMAPI {
@@ -27,18 +27,10 @@ extension LLMAPI {
         // NOTE: body is empty
     }
     
-    private func send(prompt: String) async throws -> String {
+    private func send(prompt: String) async throws -> ResponseBody {
         let request = try makePromptRequest(prompt: prompt)
         let body: ResponseBody = try await send(request: request, decoder: NetService.decoder)
-        return try decodeAssistantReply(body: body)
-    }
-    
-    // For now all subcommands use a array of strings as output
-    internal func decodeContentStructure<T: Decodable>(content: String) throws -> T {
-        guard let data = content.data(using: .utf8) else {
-            throw TranslatorError.notUTF8
-        }
-        return try JSONDecoder().decode(T.self, from: data)
+        return body
     }
     
     public func translate(texts: [String],
@@ -51,22 +43,22 @@ extension LLMAPI {
             throw TranslatorError.invalidInput
         }
 
-        let content = try await send(prompt:  "Translate a JSON list of strings from langauge code \(sourceLangauge?.identifier ?? "automatically detected from the text") to language with code \(targetLanguage). Your output must also be an unformatted list of JSON with a top-level array. Here is the list: \(textsJSON)")
+        let body = try await send(prompt:  "Translate a JSON list of strings from langauge code \(sourceLangauge?.identifier ?? "automatically detected from the text") to language with code \(targetLanguage). Your output must also be an unformatted list of JSON with a top-level array. Here is the list: \(textsJSON)")
         
-        return try decodeContentStructure(content: content)
+        let structuredReply = try decodeStructuredReply(body: body)
+        return structuredReply.data
     }
     
     public func availableLanguageCodes() async throws -> Set<String> {
-        let content = try await send(prompt: "List all written langauges you as an llm can translate to. Your output must be a JSON array of strings. Each language as it's IETF BCP 47 language code with only the first part, such as DE, EN, ZH and that matches the language as it would be represented in an Xcode StringsCatalog file.")
-        let langauges: [String] = try decodeContentStructure(content: content)
-        return Set(langauges)
+        let body = try await send(prompt: "List all written langauges you as an llm can translate to. Your output must be a JSON array of strings. Each language as it's IETF BCP 47 language code with only the first part, such as DE, EN, ZH and that matches the language as it would be represented in an Xcode StringsCatalog file.")
+        let structuredReply = try decodeStructuredReply(body: body)
+        return Set(structuredReply.data)
     }
 }
 
 // General data types commonly used
 
 enum LLM {
-    // NOTE: Used in Request and Response
     struct Message: Codable {
         let role: Role
         enum Role: String, Codable {
@@ -76,6 +68,10 @@ enum LLM {
     }
     
     struct Schema: Encodable {
+        struct StructuredContent: Decodable {
+            let data: [String]
+        }
+        
         let type = "object"
         let additionalProperties: Bool = false
         let required: [String] = ["data"]

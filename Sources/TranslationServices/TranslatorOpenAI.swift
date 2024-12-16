@@ -83,15 +83,25 @@ public struct TranslatorOpenAI: Translator, ModelSelectable, LLMAPI {
         struct Choice: Decodable {
             let index: Int
             let finishReason: String // TODO: make enum, ie stop
-            let message: LLM.Message
+            let message: Message
+            struct Message: Decodable {
+                let role: LLM.Message.Role
+                let content: LLM.Schema.StructuredContent
+            }
         }
     }
     
-    func decodeAssistantReply(body: ResponseBody) throws -> String {
-        guard let message = body.choices.first?.message else {
+//    func decodeAssistantReply(body: ResponseBody) throws -> String {
+//        guard let message = body.choices.first?.message else {
+//            throw TranslatorError.unexpectedResponseStructure
+//        }
+//        return message.content
+//    }
+    func decodeStructuredReply(body: ResponseBody) throws -> LLM.Schema.StructuredContent {
+        guard let reply = body.choices.first?.message.content else {
             throw TranslatorError.unexpectedResponseStructure
         }
-        return message.content
+        return reply
     }
     
     // MARK: ModelSelectable

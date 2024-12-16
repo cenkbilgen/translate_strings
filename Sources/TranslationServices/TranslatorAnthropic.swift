@@ -91,13 +91,15 @@ public struct TranslatorAnthropic: Translator, ModelSelectable, LLMAPI {
             
             // for tool_use type
             let name: String? // tool name should be StringArray or toolName var
-            let input: Input?
-            struct Input: Decodable {
-                let data: [String]
-            }
+//            let input: Input?
+//            struct Input: Decodable {
+//                let data: [String]
+//            }
+            let input: LLM.Schema.StructuredContent?
         }
         let stopReason: String
     }
+    
     
     /*
      {"id":"msg_01GNPtAgB8vx6eRRe1tYoL9h","type":"message","role":"assistant","model":"claude-3-5-haiku-20241022","content":[{"type":"tool_use","id":"toolu_012uXXVJESQiReh1me18uiza","name":"StringArray","input":{"data":["af-ZA","am-ET","ar-SA","az-AZ","be-BY","bg-BG","bn-BD","bs-BA","ca-ES","cs-CZ","cy-GB","da-DK","de-DE","el-GR","en-US","es-ES","et-EE","eu-ES","fa-IR","fi-FI","fr-FR","ga-IE","he-IL","hi-IN","hr-HR","hu-HU","hy-AM","id-ID","is-IS","it-IT","ja-JP","ka-GE","kk-KZ","km-KH","kn-IN","ko-KR","lt-LT","lv-LV","mk-MK","ml-IN","mn-MN","mr-IN","ms-MY","mt-MT","my-MM","ne-NP","nl-NL","no-NO","or-IN","pa-IN","pl-PL","ps-AF","pt-BR","pt-PT","ro-RO","ru-RU","si-LK","sk-SK","sl-SI","so-SO","sq-AL","sr-RS","su-ID","sv-SE","sw-KE","ta-IN","te-IN","th-TH","tr-TR","uk-UA","ur-PK","uz-UZ","vi-VN","xh-ZA","zh-CN","zh-TW","zu-ZA"]}}],"stop_reason":"tool_use","stop_sequence":null,"usage":{"input_tokens":408,"output_tokens":472}}
@@ -114,14 +116,14 @@ public struct TranslatorAnthropic: Translator, ModelSelectable, LLMAPI {
 //        return stringArray
 //    }
     
-    func decodeAssistantReply(body: ResponseBody) throws -> String {
-        guard let text = body.content
+    func decodeStructuredReply(body: ResponseBody) throws -> LLM.Schema.StructuredContent {
+        guard let reply = body.content
             .first(where: { content in
                 content.type == .toolUse && content.name == toolName
-            })?.text else {
+            })?.input else {
             throw TranslatorError.unexpectedResponseStructure
         }
-        return text
+        return reply
     }
     
     public func listModels() async throws -> Set<String> {

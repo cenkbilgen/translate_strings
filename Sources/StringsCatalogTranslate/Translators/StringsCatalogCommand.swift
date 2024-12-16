@@ -110,6 +110,8 @@ extension StringsCatalogCommand {
         // arbitrary balance between minimizing network calls and not doing too much at once
         
         // NOTE: Using TaskGroup might cause rate limit issues with service, no need to rush
+        var completionCount = 0
+        
         for chunk in untranslatedStringKeys.chunks(ofCount: 10) {
             let texts = Array(chunk)
             let translations = try await translator.translate(
@@ -120,6 +122,8 @@ extension StringsCatalogCommand {
             guard texts.count == translations.count else {
                 throw TranslatorError.missingResponses
             }
+            completionCount += translations.count
+            print("Translated \(completionCount) of \(untranslatedStringKeys.count)")
             for index in texts.indices {
                 printVerbose("\(texts[index]) -> \(translations[index])")
                 try catalog

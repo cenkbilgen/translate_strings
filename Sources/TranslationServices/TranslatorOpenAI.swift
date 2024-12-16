@@ -19,7 +19,7 @@ public struct TranslatorOpenAI: Translator, ModelSelectable, LLMAPI {
         self.headers = ["Authorization": "Bearer \(key)"]
     }
     
-    func makePromptRequest(prompt: String) throws -> URLRequest {
+    internal func makePromptRequest(prompt: String) throws -> URLRequest {
         var request = makeRequest(path: "chat/completions")
         struct Body: Encodable {
             let model: String
@@ -87,43 +87,11 @@ public struct TranslatorOpenAI: Translator, ModelSelectable, LLMAPI {
         }
     }
     
-    struct Content: Decodable {
-        let data: [String]
-    }
-
-    public func availableLanguageCodes() async throws -> Set<String> {
-        let request = try makePromptRequest(
-            prompt: availableLanguagePrompt)
-        let body: ResponseBody = try await send(request: request, decoder: NetService.decoder)
-        guard let text = body.choices.first?.message.content,
-              let data = text.data(using: .utf8) else {
-            throw TranslatorError.invalidResponse
+    func decodeAssistantReply(body: ResponseBody) throws -> String {
+        guard let message = body.choices.first?.message else {
+            throw TranslatorError.unexpectedResponseStructure
         }
-        let languages = try JSONDecoder().decode(Content.self, from: data)
-        return Set(languages.data)
-    }
-
-    public func translate(texts: [String],
-                          sourceLanguage sourceLangauge: Locale.LanguageCode?,
-                          targetLanguage: Locale.LanguageCode) async throws -> [String] {
-        guard texts.count <= 50 else {
-            throw TranslatorError.overTextCountLimit
-        }
-        guard let textsJSON = String(data: try NetService.encoder.encode(texts), encoding: .utf8) else {
-            throw TranslatorError.invalidInput
-        }
-
-        let request = try makePromptRequest(
-            prompt: "Translate a JSON list of strings from langauge code \(sourceLangauge?.identifier ?? "automatically detected from the text") to language with code \(targetLanguage). Your output must also be an unformatted list of JSON with a top-level array. Here is the list: \(textsJSON)"
-        )
-
-        let body: ResponseBody = try await send(request: request, decoder: NetService.decoder)
-        guard let text = body.choices.first?.message.content,
-              let data = text.data(using: .utf8) else {
-            throw TranslatorError.invalidResponse
-        }
-        let results = try JSONDecoder().decode(Content.self, from: data)
-        return results.data
+        return message.content
     }
     
     // MARK: ModelSelectable

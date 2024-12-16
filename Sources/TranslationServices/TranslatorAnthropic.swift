@@ -8,7 +8,6 @@
 import Foundation
 
 public struct TranslatorAnthropic: Translator, ModelSelectable, LLMAPI {
-    
     // See: https://docs.anthropic.com/en/api/messages
 
     let baseURL = URL(string: "https://api.anthropic.com/v1")!
@@ -104,59 +103,30 @@ public struct TranslatorAnthropic: Translator, ModelSelectable, LLMAPI {
      {"id":"msg_01GNPtAgB8vx6eRRe1tYoL9h","type":"message","role":"assistant","model":"claude-3-5-haiku-20241022","content":[{"type":"tool_use","id":"toolu_012uXXVJESQiReh1me18uiza","name":"StringArray","input":{"data":["af-ZA","am-ET","ar-SA","az-AZ","be-BY","bg-BG","bn-BD","bs-BA","ca-ES","cs-CZ","cy-GB","da-DK","de-DE","el-GR","en-US","es-ES","et-EE","eu-ES","fa-IR","fi-FI","fr-FR","ga-IE","he-IL","hi-IN","hr-HR","hu-HU","hy-AM","id-ID","is-IS","it-IT","ja-JP","ka-GE","kk-KZ","km-KH","kn-IN","ko-KR","lt-LT","lv-LV","mk-MK","ml-IN","mn-MN","mr-IN","ms-MY","mt-MT","my-MM","ne-NP","nl-NL","no-NO","or-IN","pa-IN","pl-PL","ps-AF","pt-BR","pt-PT","ro-RO","ru-RU","si-LK","sk-SK","sl-SI","so-SO","sq-AL","sr-RS","su-ID","sv-SE","sw-KE","ta-IN","te-IN","th-TH","tr-TR","uk-UA","ur-PK","uz-UZ","vi-VN","xh-ZA","zh-CN","zh-TW","zu-ZA"]}}],"stop_reason":"tool_use","stop_sequence":null,"usage":{"input_tokens":408,"output_tokens":472}}
      */
     
-    func decodeArray(body: ResponseBody) throws -> [String] {
-        guard let content = body.content
+//    func decodeArray(body: ResponseBody) throws -> [String] {
+//        guard let content = body.content
+//            .first(where: { content in
+//                content.type == .toolUse && content.name == toolName
+//            }),
+//              let stringArray = content.input?.data else {
+//            throw TranslatorError.unexpectedResponseFormat
+//        }
+//        return stringArray
+//    }
+    
+    func decodeAssistantReply(body: ResponseBody) throws -> String {
+        guard let text = body.content
             .first(where: { content in
                 content.type == .toolUse && content.name == toolName
-            }),
-              let stringArray = content.input?.data else {
-            throw TranslatorError.unexpectedResponseFormat
+            })?.text else {
+            throw TranslatorError.unexpectedResponseStructure
         }
-        return stringArray
+        return text
     }
-
-    public func availableLanguageCodes() async throws -> Set<String> {
-        let request = try makePromptRequest(
-            prompt: availableLanguagePrompt)
-        let body: ResponseBody = try await send(request: request, decoder: NetService.decoder)
-        let languages = try decodeArray(body: body)
-        return Set(languages)
-    }
-
-    public func translate(texts: [String],
-                          sourceLanguage: Locale.LanguageCode?,
-                          targetLanguage: Locale.LanguageCode) async throws -> [String] {
-        guard texts.count <= 50 else {
-            throw TranslatorError.overTextCountLimit
-        }
-        guard let sourceLanguage else {
-            throw TranslatorError.sourceLanguageRequired
-        }
-        guard let textsJSON = String(data: try NetService.encoder.encode(texts), encoding: .utf8) else {
-            throw TranslatorError.invalidInput
-        }
-
-        let request = try makePromptRequest(
-            prompt: "Translate a JSON list of strings from langauge code \(sourceLanguage) to language with code \(targetLanguage). Your output must also be an unformatted list of JSON with a top-level array. Here is the list: \(textsJSON)"
-        )
-        
-        // TODO: Factor out for the LLM protocol extension
-
-        let body: ResponseBody = try await send(request: request, decoder: NetService.decoder)
-//        guard let text = body.content.first?.text,
-//              let data = text.data(using: .utf8) else {
-//            throw TranslatorError.invalidResponse
-//        }
-//        let results = try JSONDecoder().decode([String].self, from: data)
-        let results = try decodeArray(body: body)
-        return results
-    }
-    
-    // MARK: ModelSelectable
     
     public func listModels() async throws -> Set<String> {
         // see https://docs.anthropic.com/en/docs/about-claude/models
-        // no endpoint to list
+        // TODO: can't find endpoint to list, ask Claude
         return []
     }
 

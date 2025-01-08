@@ -16,8 +16,8 @@ struct MainCommand: AsyncParsableCommand {
             ListKeysCommand.self,
             DeleteKeyCommand.self,
             PrintKeyCommand.self
-        ],
-        defaultSubcommand: DeepL.self
+        ]
+        // defaultSubcommand: DeepL.self
     )
 
     #if DEBUG

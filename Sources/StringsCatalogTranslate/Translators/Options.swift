@@ -19,13 +19,15 @@ struct StringsCatalogGlobalOptions: ParsableArguments {
 
 struct KeyOptions: ParsableArguments {
     static let keyArgumentHelpText = """
-    --key <key> (Required)
+    --key <key> 
     The API key used for authentication. You can provide it in one of two ways:
     1. From Keychain:
        Use the format `key_id:[YOUR_KEY_ID]` (e.g., `key_id:key1`). The tool will search for the specified `YOUR_KEY_ID` in the keychain.
        - If the key isn't found, you will be prompted to enter it.
        - The entered key will be securely saved under the provided `YOUR_KEY_ID` for future use.
-    2. Direct Value:
+    2. From Environment Variable:
+        Set the standard environment variable, such as OPENAI_API_KEY or specify with "env:MY_API_KEY".
+    3. Direct Value:
        Simply pass the API key as a literal string without any format (e.g., `--key your-api-key`).
     """
 //    3. Environment Variable (NOT RECOMMENDED): Use the format `env:`. The program will look for the API key in environment variables \("DeepLCommand.keyEnvVarName") or \(GoogleCommand.keyEnvVarName).
@@ -34,7 +36,7 @@ struct KeyOptions: ParsableArguments {
     @Option(name: .shortAndLong,
             help: ArgumentHelp(stringLiteral: KeyOptions.keyArgumentHelpText)
     )
-    var key: String
+    var key: String?
 }
 
 // MARK: Source/Target Language Codes

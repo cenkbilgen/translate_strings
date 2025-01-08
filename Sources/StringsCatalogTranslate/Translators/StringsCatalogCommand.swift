@@ -13,7 +13,7 @@ import StringsCatalogKit
 
 protocol StringsCatalogCommand: AsyncParsableCommand, Nameable, TranslatorMaker {
     static var commandName: String { get }
-    static var keyEnvVarName: String { get }
+    static var defaultKeyEnvironmentVar: String { get }
     
     var globalOptions: StringsCatalogGlobalOptions { get}
     var fileOptions: FileOptions { get }
@@ -54,7 +54,8 @@ extension StringsCatalogCommand {
     }
     
     func getKeyValue() async throws -> String {
-        let parsedKeyType = try KeyArgumentParser.parse(value: globalOptions.keyOptions.key)
+        let keyArgument = globalOptions.keyOptions.key ?? "env:\(Self.defaultKeyEnvironmentVar)"
+        let parsedKeyType = try KeyArgumentParser.parse(value: keyArgument)
         let key = try await KeyArgumentParser.getKeyValue(parsed: parsedKeyType)
         
 #if DEBUG

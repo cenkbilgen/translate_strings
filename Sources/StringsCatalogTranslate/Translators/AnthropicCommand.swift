@@ -12,7 +12,7 @@ import TranslationServices
 struct Anthropic: StringsCatalogCommand {
     static let commandName = "anthropic"
     static let name = "Anthropic"
-    static let keyEnvVarName = "CLAUDE_API_KEY"
+    static let defaultKeyEnvironmentVar = "CLAUDE_API_KEY"
     
     @OptionGroup var globalOptions: StringsCatalogGlobalOptions
     @OptionGroup var fileOptions: FileOptions

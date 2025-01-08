@@ -12,7 +12,7 @@ import TranslationServices
 struct OpenAI: StringsCatalogCommand {
     static let commandName = "openai"
     static let name = "OpenAI"
-    static let keyEnvVarName = "OPENAI_API_KEY"
+    static let defaultKeyEnvironmentVar = "OPENAI_API_KEY"
     
     @OptionGroup var globalOptions: StringsCatalogGlobalOptions
     @OptionGroup var fileOptions: FileOptions

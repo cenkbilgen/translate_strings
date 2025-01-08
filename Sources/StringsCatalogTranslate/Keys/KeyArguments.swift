@@ -23,7 +23,7 @@ enum KeyArgumentParser {
     static func parse(value: String) throws -> ParsedValue {
         if let match = value.firstMatch(of: /^key_id:(?<keyId>[A-Za-z0-9_-]+)$/) {
            .keychain(String(match.output.keyId))
-        } else if let match = value.firstMatch(of:  /^env:(?<name>[.*])$/) {
+        } else if let match = value.firstMatch(of:  /^env:(?<name>.*)$/) {
             .env(String(match.output.name))
         } else {
             .verbatim(value)
@@ -67,8 +67,9 @@ enum KeyArgumentParser {
     }
     
     private static func key(envVarName name: String) throws -> String {
-        guard let value = ProcessInfo().environment[name.capitalized] else {
-            print("No key for environment variable \"\(name.capitalized)\"")
+        let name = name.uppercased()
+        guard let value = ProcessInfo().environment[name] else {
+            print("No key for environment variable \"\(name)\"")
             throw TranslatorError.noAuthorizationKey
         }
         return value

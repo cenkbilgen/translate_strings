@@ -14,32 +14,36 @@ curl \
 
 import Foundation
 
-public struct TranslatorGoogle: Translator {
+public struct TranslatorGemini: Translator, ModelSelectable, LLMAPI {
     // See: https://cloud.google.com/vertex-ai/generative-ai/docs/translate/translate-text#translation_llm
 
     let key: String
     let baseURL: URL
-    public let sourceLanguage: Locale.LanguageCode
+    let headers: [String: String]
+    let model: String
 
     public init(key: String,
-                projectId: String? = nil, s
-                sourceLanguage: Locale.LanguageCode) throws {
+                model: String,
+                projectId: String?) throws {
         self.key = key
-        self.sourceLanguage = sourceLanguage
-        guard let baseURL = URL(string: "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=\(key)") else {
+        self.model = model
+        self.headers = [
+            "Content-Type": "application/json"
+        ]
+        guard let baseURL = URL(string: "https://generativelanguage.googleapis.com/v1beta/models/\(model):generateContent?key=\(key)") else {
             throw TranslatorError.invalidURL
         }
         self.baseURL = baseURL
     }
+    
+    func listModels() async throws -> Set<String> {
+        ["gemini-1.5-flash", "gemini-2.0-flash-exp"]
+    }
 
-    func makeRequest(prompt: String) throws -> URLRequest {
-        var request = URLRequest(url: baseURL)
+    func makePromptRequest(prompt: String) throws -> URLRequest {
+        var request = makeRequest(path: "")
 
         // -d '{"contents":[{"parts":[{"text":"Explain how AI works"}]}]}' \
-
-        request.httpMethod = "POST"
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-
         struct Body: Encodable {
             let contents: [Content]
             struct Content: Encodable {
@@ -73,30 +77,44 @@ public struct TranslatorGoogle: Translator {
             }
             let generationConfig = GenerationConfig()
         }
-
-        request.httpBody = try NetService.encoder.encode(Body(contents: [
+        
+        request.httpBody = try JSONEncoder().encode(Body(contents: [
             Body.Content(parts: [
                 Body.Content.Part(text: prompt)
             ])
         ]))
-
+        
         return request
     }
-
-    public func availableLanguageCodes() async throws -> Set<String> {
-        let request = try makeRequest(
-            prompt: "List all written langauges you as an llm can translate to. Your output must be a JSON array of strings. Each language as it's IETF BCP 47 language code.")
-
-        let body: ResponseBody = try await send(request: request, decoder: JSONDecoder())
+    
+    func decodeStructuredReply(body: ResponseBody) throws -> LLM.Schema.StructuredContent {
+//        guard let reply = body.candidates.first?.content.parts.map(\.text) else {
+//            throw TranslatorError.unexpectedResponseStructure
+//        }
         guard let text = body.candidates.first?.content.parts.first?.text,
               let data = text.data(using: .utf8) else {
-            throw TranslatorError.invalidResponse
+            throw TranslatorError.unexpectedResponseStructure
         }
-        let languages = try JSONDecoder().decode([String].self, from: data)
-        return Set(languages)
+        // the structured content specification for Gemini is somewhat looser, but dont' want to make another data structure, just decode and cast as the LLM.Schema.StructuredContent
+        let words = try JSONDecoder().decode([String].self, from: data)
+        return LLM.Schema.StructuredContent(data: words)
     }
+    
+
+//    public func availableLanguageCodes() async throws -> Set<String> {
+//        let request = try makePromptRequest(
+//            prompt: "List all written langauges you as an llm can translate to. Your output must be a JSON array of strings. Each language as it's IETF BCP 47 language code.")
+//
+//        let body: ResponseBody = try await send(request: request, decoder: JSONDecoder())
+//        guard let text = body.candidates.first?.content.parts.first?.text,
+//              let data = text.data(using: .utf8) else {
+//            throw TranslatorError.invalidResponse
+//        }
+//        let languages = try JSONDecoder().decode([String].self, from: data)
+//        return Set(languages)
+//    }
         
-    private struct ResponseBody: Decodable {
+    struct ResponseBody: Decodable {
         let candidates: [Candidate]
         struct Candidate: Decodable {
             let finishReason: String // "STOP"
@@ -155,33 +173,33 @@ public struct TranslatorGoogle: Translator {
 
      */
 
-    public func translate(texts: [String],
-                          sourceLanguage: Locale.LanguageCode?,
-                          targetLanguage: Locale.LanguageCode) async throws -> [String] {
-        guard texts.count <= 50 else {
-            throw TranslatorError.overTextCountLimit
-        }
-        guard let sourceLanguage else {
-            throw TranslatorError.sourceLanguageRequired
-        }
-        guard let textsJSON = String(data: try NetService.encoder.encode(texts), encoding: .utf8) else {
-            throw TranslatorError.invalidInput
-        }
-
-        let request = try makeRequest(
-            prompt: "Translate a JSON list of strings from langauge code \(sourceLanguage) to language with code \(targetLanguage). Your output must also be an unformatted list of JSON. Here is the list: \(textsJSON)"
-        )
-
-        // NOTE: Looks similar to request body but slight difference mean can't reuse
-       
-
-        let body: ResponseBody = try await send(request: request, decoder: JSONDecoder())
-        let translatedTexts = body.candidates.compactMap(\.content.parts.first?.text).joined()
-        guard let data = translatedTexts.data(using: .utf8) else {
-            throw TranslatorError.notUTF8
-        }
-        // response mixes camel and snake case, use standard decoder
-        let results = try JSONDecoder().decode([String].self, from: data)
-        return results
-    }
+//    public func translate(texts: [String],
+//                          sourceLanguage: Locale.LanguageCode?,
+//                          targetLanguage: Locale.LanguageCode) async throws -> [String] {
+//        guard texts.count <= 50 else {
+//            throw TranslatorError.overTextCountLimit
+//        }
+//        guard let sourceLanguage else {
+//            throw TranslatorError.sourceLanguageRequired
+//        }
+//        guard let textsJSON = String(data: try NetService.encoder.encode(texts), encoding: .utf8) else {
+//            throw TranslatorError.invalidInput
+//        }
+//
+//        let request = try makePromptRequest(
+//            prompt: "Translate a JSON list of strings from langauge code \(sourceLanguage) to language with code \(targetLanguage). Your output must also be an unformatted list of JSON. Here is the list: \(textsJSON)"
+//        )
+//
+//        // NOTE: Looks similar to request body but slight difference mean can't reuse
+//       
+//
+//        let body: ResponseBody = try await send(request: request, decoder: JSONDecoder())
+//        let translatedTexts = body.candidates.compactMap(\.content.parts.first?.text).joined()
+//        guard let data = translatedTexts.data(using: .utf8) else {
+//            throw TranslatorError.notUTF8
+//        }
+//        // response mixes camel and snake case, use standard decoder
+//        let results = try JSONDecoder().decode([String].self, from: data)
+//        return results
+//    }
 }

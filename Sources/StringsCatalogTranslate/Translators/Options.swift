@@ -26,12 +26,10 @@ struct KeyOptions: ParsableArguments {
        - If the key isn't found, you will be prompted to enter it.
        - The entered key will be securely saved under the provided `YOUR_KEY_ID` for future use.
     2. From Environment Variable:
-        Set the standard environment variable, such as OPENAI_API_KEY or specify with "env:MY_API_KEY".
+        Set the standard environment variable, such as OPENAI_API_KEY or GEMINI_API_KEY or specify with "env:MY_API_KEY".
     3. Direct Value:
        Simply pass the API key as a literal string without any format (e.g., `--key your-api-key`).
     """
-//    3. Environment Variable (NOT RECOMMENDED): Use the format `env:`. The program will look for the API key in environment variables \("DeepLCommand.keyEnvVarName") or \(GoogleCommand.keyEnvVarName).
-//    """
     
     @Option(name: .shortAndLong,
             help: ArgumentHelp(stringLiteral: KeyOptions.keyArgumentHelpText)

@@ -11,13 +11,13 @@ struct MainCommand: AsyncParsableCommand {
         version: version,
         subcommands: [
             DeepL.self,
-            Anthropic.self,
             OpenAI.self,
+            GeminiAI.self,
+            Anthropic.self,
             ListKeysCommand.self,
             DeleteKeyCommand.self,
             PrintKeyCommand.self
         ]
-        // defaultSubcommand: DeepL.self
     )
 
     #if DEBUG

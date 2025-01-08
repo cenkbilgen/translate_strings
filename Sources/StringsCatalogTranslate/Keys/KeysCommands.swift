@@ -44,7 +44,7 @@ struct DeleteKeyCommand: AsyncParsableCommand {
 
 struct PrintKeyCommand: AsyncParsableCommand {
     static let configuration = CommandConfiguration(commandName: "print_key",
-                                                    abstract: "Print an API keys stored in Keychain to STDOUT.")
+                                                    abstract: "Print an API key stored in Keychain to STDOUT.")
     @Argument var keyId: String
 
     mutating func run() async throws {

@@ -87,8 +87,8 @@ OPTIONS:
 - **OpenAI:** Obtain a key from their [API portal](https://openai.com/api/).
 - **Anthropic** Get a key from [Anthropic Dashboard](https://console.anthropic.com/dashboard).
 
-
 Saved API keys in the keychain can be managed using the macOS Keychain app and searching keys prefixed with `tools.xcode.translate_strings`.
+
 ---
 
 ## Building

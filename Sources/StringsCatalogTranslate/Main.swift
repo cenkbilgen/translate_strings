@@ -14,6 +14,8 @@ struct MainCommand: AsyncParsableCommand {
             Anthropic.self,
             OpenAI.self,
             ListKeysCommand.self,
+            DeleteKeyCommand.self,
+            PrintKeyCommand.self
         ],
         defaultSubcommand: DeepL.self
     )

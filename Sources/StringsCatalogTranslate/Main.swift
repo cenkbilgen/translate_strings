@@ -3,7 +3,7 @@ import ArgumentParser
 
 @main
 struct MainCommand: AsyncParsableCommand {
-    static let version = "3.1.0"
+    static let version = "3.2.0"
         
     static let configuration = CommandConfiguration(
         commandName: "strings_catalog_translate",

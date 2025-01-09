@@ -17,8 +17,8 @@ struct GeminiAI: StringsCatalogCommand {
     @OptionGroup var globalOptions: StringsCatalogGlobalOptions
     @OptionGroup var fileOptions: FileOptions
     @OptionGroup var targetLanguageOptions: TargetTranslationOptions
-    @Option var model: String = "gemini-1.5-flash"
-    @Option var projectId: String?
+    @Option(help: ModelOptions.modelHelp) var model: String = "gemini-1.5-flash"
+    @Option(help: "Specify a Project ID") var projectId: String?
     
     func makeTranslator(key: String) async throws -> TranslatorGemini {
         try TranslatorGemini(key: key, model: model, projectId: projectId)

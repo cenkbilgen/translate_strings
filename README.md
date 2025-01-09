@@ -51,28 +51,33 @@ OVERVIEW: Translate Xcode Strings Catalog using Gemini service.
 USAGE: strings_catalog_translate gemini [--verbose] [--key <key>] [--available_languages] [--input-file <input-file>] [--output-file <output-file>] [--target-language <target-language>] [--model <model>] [--project-id <project-id>]
 
 OPTIONS:
-  -v, --verbose           Verbose output to STDOUT
+  -v, --verbose           Enable verbose output to STDOUT.
   -k, --key <key>         --key <key> 
-                          The API key used for authentication. You can provide it in one of two ways:
-                          1. From Keychain:
-                             Use the format `key_id:[YOUR_KEY_ID]` (e.g., `key_id:key1`). The tool will search for the specified `YOUR_KEY_ID` in the keychain.
-                             - If the key isn't found, you will be prompted to enter it.
-                             - The entered key will be securely saved under the provided `YOUR_KEY_ID` for future use.
-                          2. From Environment Variable:
-                              Set the standard environment variable, such as OPENAI_API_KEY or specify with "env:MY_API_KEY".
-                          3. Direct Value:
-                             Simply pass the API key as a literal string without any format (e.g., `--key your-api-key`).
-  --available_languages   List available translation language codes for service.
+                          1. **From Keychain**:
+                              - Format: `key_id:[YOUR_KEY_ID]` (e.g., `key_id:key1`)
+                              - The tool will search for `YOUR_KEY_ID` in the keychain.
+                              - If not found, you will be prompted to enter the key.
+                              - The entered key will be securely saved under `YOUR_KEY_ID` for future use.
+                          2. **From Environment Variable**:
+                              - Set a standard environment variable like `OPENAI_API_KEY`.
+                              - Or specify a custom variable using the format `env:MY_API_KEY`.
+                          3. **Direct Value**:
+                              - Provide the API key as a plain string (e.g., `--key your-api-key`).
+  --available_languages   List all available translation language codes supported by the service.
   -i, --input-file <input-file>
-                          Input Strings Catalog file. (default: Localizable.xcstrings)
+                          Path to the input Strings Catalog file. (default: Localizable.xcstrings)
   -o, --output-file <output-file>
-                          Output Strings Catalog file. Overwrites. Use "-" for STDOUT. (default: Localizable.xcstrings)
+                          Path to the output Strings Catalog file.
+                              - This file will be overwritten if it exists.
+                              - Use `-` to output to STDOUT. (default: Localizable.xcstrings)
   -t, --target-language <target-language>
-                          The target language identifier, ie "de". Case-insensitive.
-  --model <model>         (default: gemini-1.5-flash)
+                          Target language identifier (e.g., `de` for German). Case-insensitive.
+  --model <model>         Specify the model to use. (default: gemini-1.5-flash)
   --project-id <project-id>
+                          Specify a Project ID
   --version               Show the version.
   -h, --help              Show help information.
+
 ```
 
 **Notes:** 

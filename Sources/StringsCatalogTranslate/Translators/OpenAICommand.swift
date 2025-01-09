@@ -17,7 +17,7 @@ struct OpenAI: StringsCatalogCommand {
     @OptionGroup var globalOptions: StringsCatalogGlobalOptions
     @OptionGroup var fileOptions: FileOptions
     @OptionGroup var targetLanguageOptions: TargetTranslationOptions
-    @Option var model: String = "gpt-4o"
+    @Option(help: ModelOptions.modelHelp) var model: String = "gpt-4o"
     
     func makeTranslator(key: String) async throws -> TranslatorOpenAI {
         try TranslatorOpenAI(key: key, model: model)

@@ -17,7 +17,7 @@ struct Anthropic: StringsCatalogCommand {
     @OptionGroup var globalOptions: StringsCatalogGlobalOptions
     @OptionGroup var fileOptions: FileOptions
     @OptionGroup var targetLanguageOptions: TargetTranslationOptions
-    @Option var model: String = "claude-3-5-haiku-latest"
+    @Option(help: ModelOptions.modelHelp) var model: String = "claude-3-5-haiku-latest"
     
     func makeTranslator(key: String) async throws -> TranslatorAnthropic {
         try TranslatorAnthropic(key: key, model: model)

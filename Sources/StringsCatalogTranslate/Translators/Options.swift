@@ -11,6 +11,9 @@ struct StringsCatalogGlobalOptions: ParsableArguments {
     @Flag(name: .shortAndLong, help: "Verbose output to STDOUT")
     var verbose: Bool = false
     
+    @Flag(name: .customLong("vv"), help: "Very verbose output to STDOUT")
+    var veryVerbose: Bool = false
+    
     @OptionGroup var keyOptions: KeyOptions
     
     @Flag(name: .customLong("available_languages"),
@@ -21,11 +24,13 @@ struct KeyOptions: ParsableArguments {
     static let keyArgumentHelpText = """
     --key <key> (Required)
     The API key used for authentication. You can provide it in one of two ways:
-    1. From Keychain:
+    1. From Keychain by key id:
+       eg: --key key_id:openai_keyid_1
        Use the format `key_id:[YOUR_KEY_ID]` (e.g., `key_id:key1`). The tool will search for the specified `YOUR_KEY_ID` in the keychain.
        - If the key isn't found, you will be prompted to enter it.
        - The entered key will be securely saved under the provided `YOUR_KEY_ID` for future use.
     2. Direct Value:
+       eg: --key abc-def-123-456-789
        Simply pass the API key as a literal string without any format (e.g., `--key your-api-key`).
     """
 //    3. Environment Variable (NOT RECOMMENDED): Use the format `env:`. The program will look for the API key in environment variables \("DeepLCommand.keyEnvVarName") or \(GoogleCommand.keyEnvVarName).

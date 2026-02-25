@@ -1,5 +1,6 @@
 import Foundation
 import ArgumentParser
+import Logging
 
 @main
 struct MainCommand: AsyncParsableCommand {
@@ -30,5 +31,28 @@ struct MainCommand: AsyncParsableCommand {
         case missingRequiredArgument(String)
     }
 }
+
+enum VerbosityLevel {
+    case none, quiet, v, vv
+}
+
+func configureStdoutLogger(level: VerbosityLevel) {
+    LoggingSystem.bootstrap { label in
+        var handler = StreamLogHandler.standardOutput(label: label)
+        handler.logLevel = switch level {
+        case .none:
+                .warning
+        case .v:
+                .info
+        case .vv:
+                .trace
+        case .quiet:
+                .critical
+        }
+        return handler
+    }
+}
+
+let logger = Logger(label: "com.bilgen.translate_strings")
 
 

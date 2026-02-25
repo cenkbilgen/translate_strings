@@ -37,10 +37,10 @@ enum KeyArgumentParser {
         case .env(let name):
             return try key(envVarName: name)
         case .keychain(let keyId):
-            print("Getting value from keychain \(keyId)")
+            logger.info("Getting value from keychain \(keyId)")
             do {
                 let key = try await Keychain.access.read(id: keyId)
-                print("Found key with id \(keyId): \(key)")
+                logger.info("Found key with id \(keyId): \(key)")
                 return key
             } catch KeychainAccess.Error.notFound {
                 let key = try promptForKeyValue(keyId: keyId,
@@ -49,26 +49,26 @@ enum KeyArgumentParser {
                     try await Keychain.access.save(id: keyId, value: key)
                 } catch {
                     #if DEBUG
-                    print("Saving key failed. \(error.localizedDescription)")
+                    logger.info("Saving key failed. \(error.localizedDescription)")
                     #endif
                 }
                 return key
             } catch {
-                print(error.localizedDescription)
+                logger.info("keychain error: \(error.localizedDescription)")
                 throw error
             }
         }
     }
 
     private static func promptForKeyValue(keyId: String, onlyInteractive: Bool) throws -> String {
-        print("No key entry with id \"\(keyId)\" is stored. Creating one now.")
+        logger.info("No key entry with id \"\(keyId)\" is stored. Creating one now.")
         let key = try SecureInput.read(prompt: "Enter the key to store as id \(keyId): ")
         return key
     }
     
     private static func key(envVarName name: String) throws -> String {
         guard let value = ProcessInfo().environment[name.capitalized] else {
-            print("No key for environment variable \"\(name.capitalized)\"")
+            logger.info("No key for environment variable \"\(name.capitalized)\"")
             throw TranslatorError.noAuthorizationKey
         }
         return value

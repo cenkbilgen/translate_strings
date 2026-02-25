@@ -23,7 +23,7 @@
 //        let key = try await KeyArgumentParser.getKeyValue(parsed: parsedKey)
 //        let translator = try await C().makeTranslator(key: key)
 //        let languages = try await translator.availableLanguageCodes()
-//        print(languages.sorted().map {
+//        logger.info(languages.sorted().map {
 //            $0.uppercased()
 //        }.formatted(.list(type: .and)))
 //    }

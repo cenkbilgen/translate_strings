@@ -9,6 +9,7 @@ let package = Package(
     products: [
         .executable(name: "strings_catalog_translate", targets: ["StringsCatalogTranslate", "TranslationServices"]),
         .library(name: "TranslationServices", targets: ["TranslationServices"]),
+        .library(name: "LogUtility", targets: ["LogUtility"])
     ],
     dependencies: [
         .package(url: "https://github.com/apple/swift-argument-parser.git", from: "1.5.0"),
@@ -22,6 +23,7 @@ let package = Package(
             name: "StringsCatalogTranslate",
             dependencies: [
                 "TranslationServices",
+                "LogUtility",
                 .product(name: "StringsCatalogKit", package: "StringsCatalogKit"),
                 .product(name: "KeychainSimple", package: "KeychainSimple"),
                 .product(name: "ArgumentParser", package: "swift-argument-parser"),
@@ -33,8 +35,17 @@ let package = Package(
                 .unsafeFlags(["-warnings-as-errors"], .when(configuration: .debug)),
             ]
         ),
+        .target(name: "LogUtility",
+                dependencies: [
+                    .product(name: "Logging", package: "swift-log"),
+                ],
+                path: "Sources/LogUtility",
+                swiftSettings: [
+                    .unsafeFlags(["-warnings-as-errors"], .when(configuration: .debug)),
+                ]),
         .target(name: "TranslationServices",
                 dependencies: [
+                    "LogUtility",
                     .product(name: "Logging", package: "swift-log"),
                 ],
                 path: "Sources/TranslationServices",

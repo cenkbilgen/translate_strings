@@ -17,11 +17,11 @@ struct ListKeysCommand: AsyncParsableCommand {
     mutating func run() async throws {
         let itemIds = try await Keychain.access.searchItems()
         if itemIds.isEmpty {
-            print("No saved keys found.")
+            logger.info("No saved keys found.")
         } else {
-            print(itemIds.formatted(.list(type: .and)))
-            print("\n")
-            print("Edit or delete keys through the macOS \"keychain-access\" tool. Search for keys with the prefix \"\(Keychain.namePrefix)\".")
+            logger.info("\(itemIds.formatted(.list(type: .and)))")
+            logger.info("\n")
+            logger.info("Edit or delete keys through the macOS \"keychain-access\" tool. Search for keys with the prefix \"\(Keychain.namePrefix)\".")
         }
     }
 }

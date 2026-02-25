@@ -10,6 +10,9 @@ import ArgumentParser
 import Algorithms
 import TranslationServices
 import StringsCatalogKit
+import Logging
+import OSLog
+import LogUtility
 
 protocol StringsCatalogCommand: AsyncParsableCommand, Nameable, TranslatorMaker {
     static var commandName: String { get }
@@ -38,12 +41,6 @@ extension StringsCatalogCommand {
                              ])
     }
     
-    func printVerbose(_ string: String) {
-        if globalOptions.verbose {
-            print(string)
-        }
-    }
-    
     func validate() throws {
         // not really validating, just a convenient place for printing
         #if DEBUG
@@ -65,6 +62,15 @@ extension StringsCatalogCommand {
     }
     
     mutating func run() async throws {
+        let verbosityLevel: VerbosityLevel = if globalOptions.veryVerbose {
+                                                .vv
+                                            } else if globalOptions.verbose {
+                                                .v
+                                            } else {
+                                                .none
+                                            }
+        configureStdoutLogger(level: verbosityLevel)
+        
         let key = try await getKeyValue()
         let translator = try await makeTranslator(key: key)
         
@@ -95,16 +101,18 @@ extension StringsCatalogCommand {
         print("Translating \(sourceCode) to \(targetCode)")
 #endif
         
-        printVerbose("Parsing file \(url.lastPathComponent)")
+        logger.info("Parsing file \(url.lastPathComponent)")
         let stringKeys = catalog.strings.keys
         
         let untranslatedStringKeys = try stringKeys.filter { key in
             let translation = try catalog.getTranslation(key: key, language: targetCode.identifier)
             return translation == nil
         }
-        printVerbose("Untranslated string keys:")
-        printVerbose(untranslatedStringKeys.joined(separator: "\n"))
-        printVerbose("----------------------------------------")
+        logger.info("Untranslated string keys:")
+        logger.info("")
+        logger.info("Hello \(key)")
+        logger.info(.init(stringLiteral: untranslatedStringKeys.joined(separator: "\n")))
+        logger.info("----------------------------------------")
         
         // NOTE: Send translation in batches of 10 at a time,
         // arbitrary balance between minimizing network calls and not doing too much at once
@@ -125,7 +133,7 @@ extension StringsCatalogCommand {
             completionCount += translations.count
             print("Translated \(completionCount) of \(untranslatedStringKeys.count)")
             for index in texts.indices {
-                printVerbose("\(texts[index]) -> \(translations[index])")
+                logger.info("\(texts[index]) -> \(translations[index])")
                 try catalog
                     .addTranslation(
                         key: texts[index],
@@ -144,7 +152,7 @@ extension StringsCatalogCommand {
             print(string)
         } else {
             try output.write(to: URL(filePath: outFile))
-            printVerbose("New strings catalog file written to \(outFile)")
+            logger.info("New strings catalog file written to \(outFile)")
         }
     }
 }

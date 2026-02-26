@@ -38,5 +38,13 @@ let package = Package(
                 swiftSettings: [
                     .unsafeFlags(["-warnings-as-errors"], .when(configuration: .debug)),
                 ]),
+        .testTarget(
+            name: "StringsCatalogTranslateTests",
+            dependencies: [
+                "StringsCatalogTranslate",
+                .product(name: "StringsCatalogKit", package: "StringsCatalogKit"),
+            ],
+            path: "Tests/StringsCatalogTranslateTests"
+        ),
     ]
 )

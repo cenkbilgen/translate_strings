@@ -12,7 +12,7 @@ import TranslationServices
 struct DeepL: StringsCatalogCommand {
     static let commandName = "deepl"
     static let name = "DeepL"
-    static let keyEnvVarName = "DEEPL_API_KEY"
+    static let defaultKeyEnvironmentVar = "DEEPL_API_KEY"
     
     @OptionGroup var globalOptions: StringsCatalogGlobalOptions
     @OptionGroup var fileOptions: FileOptions
